@@ -16,9 +16,13 @@ function groupKey(cs) {
 
 function sortWithinGroup(convertedSections) {
   return [...convertedSections].sort((a, b) =>
-    (a.section.section ?? "").localeCompare(b.section.section ?? "", undefined, {
-      numeric: true,
-    }),
+    (a.section.section ?? "").localeCompare(
+      b.section.section ?? "",
+      undefined,
+      {
+        numeric: true,
+      },
+    ),
   );
 }
 
