@@ -79,7 +79,10 @@ export default function CourseDetailsIndexPage() {
             Course Details for {moreDetails.courseId} {yyyyqToQyy(qtr)}
           </h5>
         )}
-        <FinalExamCard finalsInfo={finalsInfo} />
+        <FinalExamCard
+          finalsInfo={finalsInfo}
+          cardProps={{ className: "py-1 my-4" }}
+        />
 
         {moreDetails && <CourseDetailsTable details={[moreDetails]} />}
         {moreDetails && <CourseDescriptionTable course={moreDetails} />}
