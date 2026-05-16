@@ -83,6 +83,19 @@ export const isSection = (en1) => {
   return en1.substring(2) !== "00";
 };
 
+// Summer session letter from GOLD-style session code (e.g. "00000A  " -> "A").
+export const formatSummerSession = (session) => {
+  if (session == null || typeof session !== "string") {
+    return "";
+  }
+  const s = session.trim();
+  if (s.length < 6) {
+    return "";
+  }
+  const ch = s.charAt(5);
+  return /^[A-Za-z]$/.test(ch) ? ch.toUpperCase() : "";
+};
+
 // returns the course status based on cancel, closed, or full
 export const formatStatus = (section) => {
   if (section.courseCancelled) {

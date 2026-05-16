@@ -7,6 +7,7 @@ import {
   formatTime,
   formatStatus,
   convertToFraction,
+  formatSummerSession,
 } from "main/utils/sectionUtils.jsx";
 
 function ConvertedSectionTable({ sections, testid = "ConvertedSectionTable" }) {
@@ -69,6 +70,11 @@ function ConvertedSectionTable({ sections, testid = "ConvertedSectionTable" }) {
       header: "Section",
       accessorKey: "section",
       cell: ({ row }) => row.original.section.section,
+    },
+    {
+      header: "Summer session",
+      accessorKey: "summerSession",
+      cell: ({ row }) => formatSummerSession(row.original.section.session),
     },
   ];
 
