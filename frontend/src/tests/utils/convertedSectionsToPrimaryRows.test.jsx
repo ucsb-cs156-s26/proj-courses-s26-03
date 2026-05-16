@@ -220,9 +220,16 @@ describe("convertedSectionsToPrimaryRows", () => {
         enrollCode: "disc",
       },
     };
+    // "0101" sorts before "x0100", so a false "lecture" there never attaches as a
+    // subRow; use a non-lecture string that still ends in ...0100 for /\d+00$/ but
+    // sorts before "0101" so the bogus lecture runs first.
     const junkPrefix = {
       courseInfo,
-      section: { ...oneSection[0].section, section: "x0100", enrollCode: "jp" },
+      section: {
+        ...oneSection[0].section,
+        section: "0a0100",
+        enrollCode: "jp",
+      },
     };
     const junkSuffix = {
       courseInfo,
