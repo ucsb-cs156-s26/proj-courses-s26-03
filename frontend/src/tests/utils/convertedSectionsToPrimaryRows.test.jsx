@@ -6,6 +6,7 @@ describe("convertedSectionsToPrimaryRows", () => {
   test("returns empty array for empty or null input", () => {
     expect(convertedSectionsToPrimaryRows([])).toEqual([]);
     expect(convertedSectionsToPrimaryRows(null)).toEqual([]);
+    expect(convertedSectionsToPrimaryRows({ length: 0 })).toEqual([]);
   });
 
   test("groups lecture with discussions for same quarter and course", () => {
@@ -24,6 +25,8 @@ describe("convertedSectionsToPrimaryRows", () => {
     expect(rows).toHaveLength(1);
     expect(rows[0].subRows).toEqual([]);
     expect(rows[0].primary.section).toBe("0100");
+    expect(rows[0].courseId).toBe(oneSection[0].courseInfo.courseId);
+    expect(rows[0].title).toBe(oneSection[0].courseInfo.title);
   });
 
   test("second lecture in same course group closes prior primary row", () => {
@@ -115,6 +118,26 @@ describe("convertedSectionsToPrimaryRows", () => {
     expect(fromLecture.generalEducation).toEqual([]);
   });
 
+  test("sorts course groups by courseId when quarter matches", () => {
+    const { section, courseInfo: baseInfo } = oneSection[0];
+    const quarter = "20221";
+    const courseB = { ...baseInfo, quarter, courseId: "CMPSC   130B" };
+    const courseA = { ...baseInfo, quarter, courseId: "CMPSC   130A" };
+    const rowB = {
+      courseInfo: courseB,
+      section: { ...section, section: "0100", enrollCode: "b" },
+    };
+    const rowA = {
+      courseInfo: courseA,
+      section: { ...section, section: "0100", enrollCode: "a" },
+    };
+    const rows = convertedSectionsToPrimaryRows([rowB, rowA]);
+    expect(rows.map((r) => r.courseId)).toEqual([
+      "CMPSC   130A",
+      "CMPSC   130B",
+    ]);
+  });
+
   test("sorts course groups by quarter when quarters differ", () => {
     const { section, courseInfo: baseInfo } = oneSection[0];
     const earlyQuarter = {
@@ -150,14 +173,70 @@ describe("convertedSectionsToPrimaryRows", () => {
 
   test("trims whitespace when detecting lecture section numbers", () => {
     const { courseInfo } = oneSection[0];
-    const rows = convertedSectionsToPrimaryRows([
-      {
-        courseInfo,
-        section: { ...oneSection[0].section, section: "  0100  " },
+    const lecture = {
+      courseInfo,
+      section: {
+        ...oneSection[0].section,
+        section: "  0100  ",
+        enrollCode: "lec",
       },
-    ]);
+    };
+    const discussion = {
+      courseInfo,
+      section: {
+        ...oneSection[0].section,
+        section: "0101",
+        enrollCode: "disc",
+      },
+    };
+    const rows = convertedSectionsToPrimaryRows([lecture, discussion]);
     expect(rows).toHaveLength(1);
-    expect(rows[0].subRows).toEqual([]);
+    expect(rows[0].primary.section).toBe("  0100  ");
+    expect(rows[0].subRows.map((s) => s.enrollCode)).toEqual(["disc"]);
+  });
+
+  test("sorts section numbers with numeric-aware localeCompare options", () => {
+    const { courseInfo } = oneSection[0];
+    const n100 = {
+      courseInfo,
+      section: { ...oneSection[0].section, section: "100", enrollCode: "1" },
+    };
+    const n99 = {
+      courseInfo,
+      section: { ...oneSection[0].section, section: "99", enrollCode: "2" },
+    };
+    const rows = convertedSectionsToPrimaryRows([n100, n99]);
+    expect(rows).toHaveLength(2);
+    expect(rows.map((r) => r.primary.section)).toEqual(["99", "100"]);
+  });
+
+  test("does not treat malformed digit runs as lecture section numbers", () => {
+    const { courseInfo } = oneSection[0];
+    const disc = {
+      courseInfo,
+      section: {
+        ...oneSection[0].section,
+        section: "0101",
+        enrollCode: "disc",
+      },
+    };
+    const junkPrefix = {
+      courseInfo,
+      section: { ...oneSection[0].section, section: "x0100", enrollCode: "jp" },
+    };
+    const junkSuffix = {
+      courseInfo,
+      section: {
+        ...oneSection[0].section,
+        section: "0100junk",
+        enrollCode: "js",
+      },
+    };
+    const rowsPrefix = convertedSectionsToPrimaryRows([junkPrefix, disc]);
+    expect(rowsPrefix).toHaveLength(2);
+
+    const rowsSuffix = convertedSectionsToPrimaryRows([junkSuffix, disc]);
+    expect(rowsSuffix).toHaveLength(2);
   });
 
   test("sorts sections within a group by section number", () => {
@@ -200,7 +279,7 @@ describe("convertedSectionsToPrimaryRows", () => {
     expect(rows[1].primary.section).toBe("0101");
   });
 
-  test("sort comparator uses ?? fallback on both sides for localeCompare", () => {
+  test("sort comparator uses empty string when rhs section number is missing", () => {
     const { courseInfo } = oneSection[0];
     const withNum = {
       courseInfo,
@@ -214,7 +293,10 @@ describe("convertedSectionsToPrimaryRows", () => {
         enrollCode: "b",
       },
     };
-    convertedSectionsToPrimaryRows([withNum, withoutNum]);
-    convertedSectionsToPrimaryRows([withoutNum, withNum]);
+    const rowsAB = convertedSectionsToPrimaryRows([withNum, withoutNum]);
+    expect(rowsAB.map((r) => r.primary.enrollCode)).toEqual(["b", "a"]);
+
+    const rowsBA = convertedSectionsToPrimaryRows([withoutNum, withNum]);
+    expect(rowsBA.map((r) => r.primary.enrollCode)).toEqual(["b", "a"]);
   });
 });
