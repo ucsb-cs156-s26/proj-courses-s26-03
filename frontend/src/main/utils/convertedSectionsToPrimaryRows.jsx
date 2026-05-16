@@ -4,7 +4,7 @@
  * title, primary (lecture section), and subRows (secondary sections).
  */
 function isLectureSectionNumber(sectionNum) {
-  if (sectionNum == null || typeof sectionNum !== "string") {
+  if (typeof sectionNum !== "string") {
     return false;
   }
   return /^\d+00$/.test(sectionNum.trim());
