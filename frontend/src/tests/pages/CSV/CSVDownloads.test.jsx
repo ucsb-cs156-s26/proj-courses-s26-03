@@ -62,7 +62,6 @@ describe("CSVDownloadsPage tests", () => {
 
   test("renders correctly", async () => {
     renderPage();
-
     expect(await screen.findByText("CSV Downloads")).toBeInTheDocument();
   });
 
@@ -70,14 +69,12 @@ describe("CSVDownloadsPage tests", () => {
     const assignMock = mockLocationAssign();
     renderPage();
 
-    // Changed label query to match SingleQuarterDropdown component's label
     const quarterSelect = await screen.findAllByLabelText("Quarter");
     const byQuarterButton = screen.getAllByRole("button", {
       name: "Download CSV",
     })[0];
     const byQuarterForm = byQuarterButton.closest("form");
 
-    // Switching value to 20242 to verify selection handling works correctly
     fireEvent.change(quarterSelect[0], { target: { value: "20242" } });
     fireEvent.submit(byQuarterForm);
 
@@ -97,9 +94,10 @@ describe("CSVDownloadsPage tests", () => {
       }),
     );
 
-    // Changed label query to match SingleQuarterDropdown component's label
     const quarterSelects = await screen.findAllByLabelText("Quarter");
     const subjectSelect = await screen.findByLabelText("Subject Area");
+    const levelSelect = await screen.findByRole("combobox", { name: /level/i });
+    
     const omitSectionsCheckbox = await screen.findByTestId(
       "CSVDownloads.OmitSections-checkbox",
     );
@@ -113,13 +111,18 @@ describe("CSVDownloadsPage tests", () => {
     const byQuarterAndSubjectButton = allDownloadButtons[1];
     const byQuarterAndSubjectForm = byQuarterAndSubjectButton.closest("form");
 
-    // Switching value to 20242 to verify selection handling works correctly
     fireEvent.change(quarterSelects[1], { target: { value: "20242" } });
     fireEvent.change(subjectSelect, { target: { value: "CMPSC" } });
+    
+    fireEvent.change(levelSelect, { target: { value: "G" } });
+
     expect(omitSectionsCheckbox).toBeChecked();
     expect(withTimeLocationsCheckbox).toBeChecked();
 
-    fireEvent.click(withTimeLocationsCheckbox); // set false
+    fireEvent.click(omitSectionsCheckbox);
+    fireEvent.click(withTimeLocationsCheckbox); 
+
+    expect(omitSectionsCheckbox).not.toBeChecked();
     expect(withTimeLocationsCheckbox).not.toBeChecked();
 
     expect(byQuarterAndSubjectButton).not.toBeDisabled();
@@ -127,7 +130,115 @@ describe("CSVDownloadsPage tests", () => {
 
     expect(assignMock).toHaveBeenCalledTimes(1);
     expect(assignMock).toHaveBeenCalledWith(
-      "/api/courses/csv/byQuarterAndSubjectArea?yyyyq=20242&subjectArea=CMPSC&level=U&omitSections=true&withTimeLocations=false",
+      "/api/courses/csv/byQuarterAndSubjectArea?yyyyq=20242&subjectArea=CMPSC&level=G&omitSections=false&withTimeLocations=false",
     );
+  });
+
+  test("submitting by-quarter-and-subject form cycles through all remaining coverage branches", async () => {
+    const assignMock = mockLocationAssign();
+    renderPage();
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Download all UCSB classes by Quarter and Subject Area",
+      }),
+    );
+
+    const quarterSelects = await screen.findAllByLabelText("Quarter");
+    const subjectSelect = await screen.findByLabelText("Subject Area");
+    const levelSelect = await screen.findByRole("combobox", { name: /level/i });
+    
+    const omitSectionsCheckbox = await screen.findByTestId(
+      "CSVDownloads.OmitSections-checkbox",
+    );
+
+    const allDownloadButtons = screen.getAllByRole("button", {
+      name: "Download CSV",
+    });
+    const byQuarterAndSubjectButton = allDownloadButtons[1];
+    const byQuarterAndSubjectForm = byQuarterAndSubjectButton.closest("form");
+
+    // Cycle 1: Option "A" maps to empty level parameter string value
+    fireEvent.change(quarterSelects[1], { target: { value: "20242" } });
+    fireEvent.change(subjectSelect, { target: { value: "CMPSC" } });
+    fireEvent.change(levelSelect, { target: { value: "A" } });
+    fireEvent.submit(byQuarterAndSubjectForm);
+    expect(assignMock).toHaveBeenLastCalledWith(
+      "/api/courses/csv/byQuarterAndSubjectArea?yyyyq=20242&subjectArea=CMPSC&level=&omitSections=true&withTimeLocations=true",
+    );
+
+    // Cycle 2: Explicit transition to option "U" with a checkbox flipped off
+    fireEvent.click(omitSectionsCheckbox); // sets false
+    fireEvent.change(levelSelect, { target: { value: "U" } });
+    fireEvent.submit(byQuarterAndSubjectForm);
+    expect(assignMock).toHaveBeenLastCalledWith(
+      "/api/courses/csv/byQuarterAndSubjectArea?yyyyq=20242&subjectArea=CMPSC&level=U&omitSections=false&withTimeLocations=true",
+    );
+
+    // Cycle 3: Fire an empty string directly into selection state to catch base/blank condition fallbacks
+    fireEvent.change(levelSelect, { target: { value: "" } });
+    fireEvent.submit(byQuarterAndSubjectForm);
+    expect(assignMock).toHaveBeenLastCalledWith(
+      "/api/courses/csv/byQuarterAndSubjectArea?yyyyq=20242&subjectArea=CMPSC&level=&omitSections=false&withTimeLocations=true",
+    );
+  });
+
+  test("initializes state from localStorage correctly to hit fallback branches", async () => {
+    // Pre-populate local storage so the ternary operators hit the 'false' and alternate string conditions
+    localStorage.setItem("CSVDownloads.Quarter", "20241");
+    localStorage.setItem("CSVDownloads.SubjectArea", "MATH");
+    localStorage.setItem("CSVDownloads.Level", "G");
+    localStorage.setItem("CSVDownloads.OmitSections", "false");
+    localStorage.setItem("CSVDownloads.WithTimeLocations", "false");
+
+    renderPage();
+
+    expect(await screen.findByText("CSV Downloads")).toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Download all UCSB classes by Quarter and Subject Area",
+      }),
+    );
+
+    // Checkboxes should initialize as unchecked due to local storage 'false' forcing the branch
+    const omitSectionsCheckbox = await screen.findByTestId("CSVDownloads.OmitSections-checkbox");
+    expect(omitSectionsCheckbox).not.toBeChecked();
+  });
+
+  test("falls back to default quarters when systemInfo lacks them", async () => {
+    // Override the beforeEach mock to return empty system info, forcing the "20221" fallback branches
+    axiosMock.onGet("/api/systemInfo").reply(200, {});
+    
+    renderPage();
+    expect(await screen.findByText("CSV Downloads")).toBeInTheDocument();
+  });
+
+  test("does not trigger download if subjectArea is empty (implicit else branch)", async () => {
+    const assignMock = mockLocationAssign();
+    
+    // Override the subjects mock to return empty so subjectArea remains ""
+    axiosMock.onGet("/api/UCSBSubjects/all").reply(200, []);
+    
+    renderPage();
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Download all UCSB classes by Quarter and Subject Area",
+      }),
+    );
+
+    const allDownloadButtons = screen.getAllByRole("button", {
+      name: "Download CSV",
+    });
+    
+    const byQuarterAndSubjectButton = allDownloadButtons[1];
+    const byQuarterAndSubjectForm = byQuarterAndSubjectButton.closest("form");
+
+    // Force submit the form programmatically to bypass the disabled button state
+    fireEvent.submit(byQuarterAndSubjectForm);
+
+    // Assert that the 'if (subjectArea)' block stopped the download
+    expect(assignMock).not.toHaveBeenCalled();
   });
 });
