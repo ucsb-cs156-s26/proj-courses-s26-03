@@ -1,20 +1,73 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import BasicLayout from "main/layouts/BasicLayout/BasicLayout";
-import { Accordion, Form, Button } from "react-bootstrap";
+import {
+  Accordion,
+  Form,
+  Button,
+  Container,
+  Row,
+  Col,
+  FormCheck,
+} from "react-bootstrap";
+import { useSystemInfo } from "main/utils/systemInfo";
+import { quarterRange } from "main/utils/quarterUtilities";
+import { useBackend } from "main/utils/useBackend";
+import SingleQuarterDropdown from "main/components/Quarters/SingleQuarterDropdown";
+import SingleSubjectDropdown from "main/components/Subjects/SingleSubjectDropdown";
+import SingleLevelDropdown from "main/components/Levels/SingleLevelDropdown";
+import { allTheLevels } from "fixtures/levelsFixtures";
 
 export default function CSVDownloadsPage() {
-  const [quarter, setQuarter] = useState("");
-  const [subjectArea, setSubjectArea] = useState("");
-  const normalizedQuarter = quarter.trim();
-  const normalizedSubjectArea = subjectArea.trim().toUpperCase();
+  const { data: systemInfo } = useSystemInfo();
+  const startQtr = systemInfo?.startQtrYYYYQ || "20221";
+  const endQtr = systemInfo?.endQtrYYYYQ || "20222";
+  const quarters = quarterRange(startQtr, endQtr);
 
-  const isValidQuarter = /^\d{5}$/.test(normalizedQuarter);
-  const isValidSubjectArea = normalizedSubjectArea.length > 0;
+  const {
+    data: subjects,
+    error: _error,
+    status: _status,
+  } = useBackend(
+    ["/api/UCSBSubjects/all"],
+    { method: "GET", url: "/api/UCSBSubjects/all" },
+    [],
+  );
 
-  const byQuarterUrl = `/api/courses/csv/quarter?yyyyq=${encodeURIComponent(normalizedQuarter)}`;
+  const localQuarter = localStorage.getItem("CSVDownloads.Quarter");
+  const localSubjectArea = localStorage.getItem("CSVDownloads.SubjectArea");
+  const localLevel = localStorage.getItem("CSVDownloads.Level");
+  const localOmitSections =
+    localStorage.getItem("CSVDownloads.OmitSections") === "false"
+      ? false
+      : true;
+  const localWithTimeLocations =
+    localStorage.getItem("CSVDownloads.WithTimeLocations") === "false"
+      ? false
+      : true;
+
+  const [quarter, setQuarter] = useState(
+    localQuarter || quarters[quarters.length - 1].yyyyq,
+  );
+  const [subjectArea, setSubjectArea] = useState(localSubjectArea || "");
+  const [level, setLevel] = useState(localLevel || "U");
+  const [omitSections, setOmitSections] = useState(localOmitSections);
+  const [withTimeLocations, setWithTimeLocations] = useState(
+    localWithTimeLocations,
+  );
+
+  useEffect(() => {
+    if (subjects.length > 0 && !subjectArea) {
+      setSubjectArea(subjects[0].subjectCode);
+    }
+  }, [subjects, subjectArea]);
+
+  const byQuarterUrl = `/api/courses/csv/quarter?yyyyq=${encodeURIComponent(quarter)}`;
   const byQuarterAndSubjectUrl =
-    `/api/courses/csv/byQuarterAndSubjectArea?yyyyq=${encodeURIComponent(normalizedQuarter)}` +
-    `&subjectArea=${encodeURIComponent(normalizedSubjectArea)}`;
+    `/api/courses/csv/byQuarterAndSubjectArea?yyyyq=${encodeURIComponent(quarter)}` +
+    `&subjectArea=${encodeURIComponent(subjectArea)}` +
+    `&level=${encodeURIComponent(level)}` +
+    `&omitSections=${encodeURIComponent(omitSections ? "true" : "false")}` +
+    `&withTimeLocations=${encodeURIComponent(withTimeLocations ? "true" : "false")}`;
 
   const downloadCsv = (url) => {
     window.location.assign(url);
@@ -22,16 +75,12 @@ export default function CSVDownloadsPage() {
 
   const handleQuarterSubmit = (e) => {
     e.preventDefault();
-    if (isValidQuarter) {
-      downloadCsv(byQuarterUrl);
-    }
+    downloadCsv(byQuarterUrl);
   };
 
   const handleQuarterSubjectSubmit = (e) => {
     e.preventDefault();
-    if (isValidQuarter && isValidSubjectArea) {
-      downloadCsv(byQuarterAndSubjectUrl);
-    }
+    if (subjectArea) downloadCsv(byQuarterAndSubjectUrl);
   };
 
   return (
@@ -47,27 +96,36 @@ export default function CSVDownloadsPage() {
             </Accordion.Header>
             <Accordion.Body>
               <Form onSubmit={handleQuarterSubmit}>
-                <Form.Group className="mb-3" controlId="quarterOnly">
-                  <Form.Label>Quarter (yyyyq)</Form.Label>
-                  <Form.Control
-                    type="text"
-                    placeholder="e.g. 20261"
-                    value={quarter}
-                    onChange={(e) => setQuarter(e.target.value)}
-                    pattern="\d{5}"
-                  />
-                  <Form.Text muted>
-                    Example: 20254 (F25), 20261 (W26), 20262 (S26)
-                  </Form.Text>
-                </Form.Group>
-
-                <Button
-                  type="submit"
-                  variant="primary"
-                  disabled={!isValidQuarter}
-                >
-                  Download CSV
-                </Button>
+                <Container>
+                  <Row className="mb-3">
+                    <Col md="auto">
+                      <SingleQuarterDropdown
+                        quarters={quarters}
+                        quarter={quarter}
+                        setQuarter={setQuarter}
+                        controlId={"CSVDownloads.Quarter"}
+                        label={"Quarter"}
+                        onChange={(e) =>
+                          localStorage.setItem(
+                            "CSVDownloads.Quarter",
+                            e.target.value,
+                          )
+                        }
+                      />
+                    </Col>
+                  </Row>
+                  <Row>
+                    <Col md="auto">
+                      <Button
+                        type="submit"
+                        variant="primary"
+                        disabled={!quarter}
+                      >
+                        Download CSV
+                      </Button>
+                    </Col>
+                  </Row>
+                </Container>
               </Form>
             </Accordion.Body>
           </Accordion.Item>
@@ -79,34 +137,93 @@ export default function CSVDownloadsPage() {
             </Accordion.Header>
             <Accordion.Body>
               <Form onSubmit={handleQuarterSubjectSubmit}>
-                <Form.Group className="mb-3" controlId="quarterWithSubject">
-                  <Form.Label>Quarter (yyyyq)</Form.Label>
-                  <Form.Control
-                    type="text"
-                    placeholder="e.g. 20261"
-                    value={quarter}
-                    onChange={(e) => setQuarter(e.target.value)}
-                    pattern="\d{5}"
-                  />
-                </Form.Group>
-
-                <Form.Group className="mb-3" controlId="subjectArea">
-                  <Form.Label>Subject Area</Form.Label>
-                  <Form.Control
-                    type="text"
-                    placeholder="e.g. CMPSC"
-                    value={subjectArea}
-                    onChange={(e) => setSubjectArea(e.target.value)}
-                  />
-                </Form.Group>
-
-                <Button
-                  type="submit"
-                  variant="primary"
-                  disabled={!isValidQuarter || !isValidSubjectArea}
-                >
-                  Download CSV
-                </Button>
+                <Container>
+                  <Row className="mb-3">
+                    <Col md="auto">
+                      <SingleQuarterDropdown
+                        quarters={quarters}
+                        quarter={quarter}
+                        setQuarter={setQuarter}
+                        controlId={"CSVDownloads.QuarterBySubjectArea"}
+                        label={"Quarter"}
+                        onChange={(e) => {
+                          localStorage.setItem(
+                            "CSVDownloads.Quarter",
+                            e.target.value,
+                          );
+                          localStorage.setItem(
+                            "CSVDownloads.QuarterBySubjectArea",
+                            e.target.value,
+                          );
+                        }}
+                      />
+                    </Col>
+                    <Col md="auto">
+                      {subjects.length > 0 && subjectArea && (
+                        <SingleSubjectDropdown
+                          subjects={subjects}
+                          subject={subjectArea}
+                          setSubject={setSubjectArea}
+                          controlId={"CSVDownloads.SubjectArea"}
+                          label={"Subject Area"}
+                        />
+                      )}
+                    </Col>
+                    <Col md="auto">
+                      <SingleLevelDropdown
+                        levels={allTheLevels}
+                        setLevel={setLevel}
+                        controlId={"CSVDownloads.Level"}
+                        label={"Level"}
+                      />
+                    </Col>
+                  </Row>
+                  <Row className="mb-3">
+                    <Col md="auto">
+                      <Form.Group controlId="CSVDownloads.OmitSections">
+                        <FormCheck
+                          data-testid="CSVDownloads.OmitSections-checkbox"
+                          label="Omit sections"
+                          onChange={(e) => {
+                            setOmitSections(e.target.checked);
+                            localStorage.setItem(
+                              "CSVDownloads.OmitSections",
+                              e.target.checked.toString(),
+                            );
+                          }}
+                          checked={omitSections}
+                        />
+                      </Form.Group>
+                    </Col>
+                    <Col md="auto">
+                      <Form.Group controlId="CSVDownloads.WithTimeLocations">
+                        <FormCheck
+                          data-testid="CSVDownloads.WithTimeLocations-checkbox"
+                          label="With time/locations"
+                          onChange={(e) => {
+                            setWithTimeLocations(e.target.checked);
+                            localStorage.setItem(
+                              "CSVDownloads.WithTimeLocations",
+                              e.target.checked.toString(),
+                            );
+                          }}
+                          checked={withTimeLocations}
+                        />
+                      </Form.Group>
+                    </Col>
+                  </Row>
+                  <Row>
+                    <Col md="auto">
+                      <Button
+                        type="submit"
+                        variant="primary"
+                        disabled={!quarter || !subjectArea}
+                      >
+                        Download CSV
+                      </Button>
+                    </Col>
+                  </Row>
+                </Container>
               </Form>
             </Accordion.Body>
           </Accordion.Item>
