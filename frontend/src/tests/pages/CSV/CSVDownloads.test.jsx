@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "react-query";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter } from "react-router";
 import axios from "axios";
 import AxiosMockAdapter from "axios-mock-adapter";
 
@@ -70,18 +70,20 @@ describe("CSVDownloadsPage tests", () => {
     const assignMock = mockLocationAssign();
     renderPage();
 
-    const quarterSelect = await screen.findAllByLabelText("Quarter (yyyyq)");
+    // Changed label query to match SingleQuarterDropdown component's label
+    const quarterSelect = await screen.findAllByLabelText("Quarter");
     const byQuarterButton = screen.getAllByRole("button", {
       name: "Download CSV",
     })[0];
     const byQuarterForm = byQuarterButton.closest("form");
 
-    fireEvent.change(quarterSelect[0], { target: { value: "20241" } });
+    // Switching value to 20242 to verify selection handling works correctly
+    fireEvent.change(quarterSelect[0], { target: { value: "20242" } });
     fireEvent.submit(byQuarterForm);
 
     expect(assignMock).toHaveBeenCalledTimes(1);
     expect(assignMock).toHaveBeenCalledWith(
-      "/api/courses/csv/quarter?yyyyq=20241",
+      "/api/courses/csv/quarter?yyyyq=20242",
     );
   });
 
@@ -95,7 +97,8 @@ describe("CSVDownloadsPage tests", () => {
       }),
     );
 
-    const quarterSelects = await screen.findAllByLabelText("Quarter (yyyyq)");
+    // Changed label query to match SingleQuarterDropdown component's label
+    const quarterSelects = await screen.findAllByLabelText("Quarter");
     const subjectSelect = await screen.findByLabelText("Subject Area");
     const omitSectionsCheckbox = await screen.findByTestId(
       "CSVDownloads.OmitSections-checkbox",
@@ -110,7 +113,8 @@ describe("CSVDownloadsPage tests", () => {
     const byQuarterAndSubjectButton = allDownloadButtons[1];
     const byQuarterAndSubjectForm = byQuarterAndSubjectButton.closest("form");
 
-    fireEvent.change(quarterSelects[1], { target: { value: "20241" } });
+    // Switching value to 20242 to verify selection handling works correctly
+    fireEvent.change(quarterSelects[1], { target: { value: "20242" } });
     fireEvent.change(subjectSelect, { target: { value: "CMPSC" } });
     expect(omitSectionsCheckbox).toBeChecked();
     expect(withTimeLocationsCheckbox).toBeChecked();
@@ -123,7 +127,7 @@ describe("CSVDownloadsPage tests", () => {
 
     expect(assignMock).toHaveBeenCalledTimes(1);
     expect(assignMock).toHaveBeenCalledWith(
-      "/api/courses/csv/byQuarterAndSubjectArea?yyyyq=20241&subjectArea=CMPSC&level=U&omitSections=true&withTimeLocations=false",
+      "/api/courses/csv/byQuarterAndSubjectArea?yyyyq=20242&subjectArea=CMPSC&level=U&omitSections=true&withTimeLocations=false",
     );
   });
 });
