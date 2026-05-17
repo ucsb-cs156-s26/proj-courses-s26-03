@@ -97,7 +97,7 @@ describe("CSVDownloadsPage tests", () => {
     const quarterSelects = await screen.findAllByLabelText("Quarter");
     const subjectSelect = await screen.findByLabelText("Subject Area");
     const levelSelect = await screen.findByRole("combobox", { name: /level/i });
-    
+
     const omitSectionsCheckbox = await screen.findByTestId(
       "CSVDownloads.OmitSections-checkbox",
     );
@@ -113,14 +113,14 @@ describe("CSVDownloadsPage tests", () => {
 
     fireEvent.change(quarterSelects[1], { target: { value: "20242" } });
     fireEvent.change(subjectSelect, { target: { value: "CMPSC" } });
-    
+
     fireEvent.change(levelSelect, { target: { value: "G" } });
 
     expect(omitSectionsCheckbox).toBeChecked();
     expect(withTimeLocationsCheckbox).toBeChecked();
 
     fireEvent.click(omitSectionsCheckbox);
-    fireEvent.click(withTimeLocationsCheckbox); 
+    fireEvent.click(withTimeLocationsCheckbox);
 
     expect(omitSectionsCheckbox).not.toBeChecked();
     expect(withTimeLocationsCheckbox).not.toBeChecked();
@@ -147,7 +147,7 @@ describe("CSVDownloadsPage tests", () => {
     const quarterSelects = await screen.findAllByLabelText("Quarter");
     const subjectSelect = await screen.findByLabelText("Subject Area");
     const levelSelect = await screen.findByRole("combobox", { name: /level/i });
-    
+
     const omitSectionsCheckbox = await screen.findByTestId(
       "CSVDownloads.OmitSections-checkbox",
     );
@@ -202,24 +202,26 @@ describe("CSVDownloadsPage tests", () => {
     );
 
     // Checkboxes should initialize as unchecked due to local storage 'false' forcing the branch
-    const omitSectionsCheckbox = await screen.findByTestId("CSVDownloads.OmitSections-checkbox");
+    const omitSectionsCheckbox = await screen.findByTestId(
+      "CSVDownloads.OmitSections-checkbox",
+    );
     expect(omitSectionsCheckbox).not.toBeChecked();
   });
 
   test("falls back to default quarters when systemInfo lacks them", async () => {
     // Override the beforeEach mock to return empty system info, forcing the "20221" fallback branches
     axiosMock.onGet("/api/systemInfo").reply(200, {});
-    
+
     renderPage();
     expect(await screen.findByText("CSV Downloads")).toBeInTheDocument();
   });
 
   test("does not trigger download if subjectArea is empty (implicit else branch)", async () => {
     const assignMock = mockLocationAssign();
-    
+
     // Override the subjects mock to return empty so subjectArea remains ""
     axiosMock.onGet("/api/UCSBSubjects/all").reply(200, []);
-    
+
     renderPage();
 
     fireEvent.click(
@@ -231,7 +233,7 @@ describe("CSVDownloadsPage tests", () => {
     const allDownloadButtons = screen.getAllByRole("button", {
       name: "Download CSV",
     });
-    
+
     const byQuarterAndSubjectButton = allDownloadButtons[1];
     const byQuarterAndSubjectForm = byQuarterAndSubjectButton.closest("form");
 
