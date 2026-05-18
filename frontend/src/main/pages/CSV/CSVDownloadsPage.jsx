@@ -105,12 +105,6 @@ export default function CSVDownloadsPage() {
                         setQuarter={setQuarter}
                         controlId={"CSVDownloads.Quarter"}
                         label={"Quarter"}
-                        onChange={(e) =>
-                          localStorage.setItem(
-                            "CSVDownloads.Quarter",
-                            e.target.value,
-                          )
-                        }
                       />
                     </Col>
                   </Row>
