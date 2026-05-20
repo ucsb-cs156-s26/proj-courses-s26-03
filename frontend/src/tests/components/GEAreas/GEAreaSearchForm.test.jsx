@@ -206,8 +206,8 @@ describe("GEAreaSearchForm tests", () => {
       // wait for options to load
       await screen.findByTestId("GEAreaSearch.Area-option-A1");
       expect(
-        screen.getByTestId("GEAreaSearch.Area-option-all"),
-      ).toBeInTheDocument();
+        screen.queryByTestId("GEAreaSearch.Area-option-all"),
+      ).not.toBeInTheDocument();
       expect(
         screen.getByTestId("GEAreaSearch.Area-option-A1"),
       ).toBeInTheDocument();
