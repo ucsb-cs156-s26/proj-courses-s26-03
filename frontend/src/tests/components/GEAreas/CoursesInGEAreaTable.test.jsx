@@ -8,7 +8,13 @@ import primaryFixtures from "fixtures/primaryFixtures";
 describe("CoursesInGEAreaTable tests", () => {
   const queryClient = new QueryClient();
   const testId = "CoursesInGEAreaTable";
-  const expectedHeaders = ["Quarter", "Course ID", "Title", "Units", "GE Areas"];
+  const expectedHeaders = [
+    "Quarter",
+    "Course ID",
+    "Title",
+    "Units",
+    "GE Areas",
+  ];
 
   test("renders empty table with correct headers", () => {
     render(
