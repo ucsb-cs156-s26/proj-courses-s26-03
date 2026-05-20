@@ -173,7 +173,9 @@ public class EnrollmentControllerTests {
 
     when(enrollmentDataPointRepository.findByYyyyq(yyyyq)).thenReturn(List.of(dataPoint));
 
-    doThrow(new CsvRequiredFieldEmptyException(EnrollmentCSV.class, new java.util.ArrayList<>(), "missing field"))
+    doThrow(
+            new CsvRequiredFieldEmptyException(
+                EnrollmentCSV.class, new java.util.ArrayList<>(), "missing field"))
         .when(mockWriter)
         .write(any(List.class));
 
