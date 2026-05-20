@@ -70,9 +70,10 @@ describe("CoursesInGEAreaTable tests", () => {
     );
 
     // f24_math_lowerDiv[0] (MATH 2A) has geCode "C  " (L&S) and "QNT" (L&S)
+    // Use .textContent (not toHaveTextContent) to verify trimming removes whitespace exactly
     expect(
-      screen.getByTestId(`${testId}-cell-row-0-col-geAreas`),
-    ).toHaveTextContent("C (L&S), QNT (L&S)");
+      screen.getByTestId(`${testId}-cell-row-0-col-geAreas`).textContent,
+    ).toBe("C (L&S), QNT (L&S)");
   });
 
   test("renders empty GE Areas cell for courses with no GE data", () => {
@@ -89,5 +90,111 @@ describe("CoursesInGEAreaTable tests", () => {
     expect(
       screen.getByTestId(`${testId}-cell-row-0-col-geAreas`),
     ).toHaveTextContent("");
+  });
+
+  test("renders GE area without college when geCollege is null", () => {
+    const courses = [
+      {
+        quarter: "20244",
+        courseId: "TEST 1A",
+        title: "Test Course",
+        generalEducation: [{ geCode: "A1", geCollege: null }],
+      },
+    ];
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <CoursesInGEAreaTable courses={courses} />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+    expect(
+      screen.getByTestId(`${testId}-cell-row-0-col-geAreas`).textContent,
+    ).toBe("A1");
+  });
+
+  test("renders empty GE Areas when generalEducation is null", () => {
+    const courses = [
+      {
+        quarter: "20244",
+        courseId: "TEST 2A",
+        title: "Test Course",
+        generalEducation: null,
+      },
+    ];
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <CoursesInGEAreaTable courses={courses} />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+    expect(
+      screen.getByTestId(`${testId}-cell-row-0-col-geAreas`),
+    ).toHaveTextContent("");
+  });
+
+  test("renders without crash when courseId is null", () => {
+    const courses = [
+      {
+        quarter: "20244",
+        courseId: null,
+        title: "Test Course",
+        generalEducation: [],
+      },
+    ];
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <CoursesInGEAreaTable courses={courses} />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+    expect(
+      screen.getByTestId(`${testId}-cell-row-0-col-courseId`),
+    ).toBeInTheDocument();
+  });
+
+  test("renders without crash when geCode is null", () => {
+    const courses = [
+      {
+        quarter: "20244",
+        courseId: "TEST 3A",
+        title: "Test Course",
+        generalEducation: [{ geCode: null, geCollege: "L&S" }],
+      },
+    ];
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <CoursesInGEAreaTable courses={courses} />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+    expect(
+      screen.getByTestId(`${testId}-cell-row-0-col-geAreas`),
+    ).toBeInTheDocument();
+  });
+
+  test("renders unitsFixed value in Units column", () => {
+    const courses = [
+      {
+        quarter: "20244",
+        courseId: "TEST 4A",
+        title: "Test Course",
+        unitsFixed: 4,
+        generalEducation: [],
+      },
+    ];
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <CoursesInGEAreaTable courses={courses} />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+    expect(
+      screen.getByTestId(`${testId}-cell-row-0-col-unitsFixed`),
+    ).toHaveTextContent("4");
   });
 });

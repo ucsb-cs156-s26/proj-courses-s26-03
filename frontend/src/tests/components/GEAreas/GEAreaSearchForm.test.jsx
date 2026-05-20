@@ -154,6 +154,9 @@ describe("GEAreaSearchForm tests", () => {
       render(<WrappedForm />);
       const areaSelect = screen.getByLabelText("General Education Area");
       expect(areaSelect.value).toBe("ALL");
+      expect(screen.getByTestId("GEAreaSearch.Status")).toHaveTextContent(
+        "Searching for ALL in",
+      );
     });
 
     test("renders correctly when useSystemInfo doesn't resolve in time", () => {

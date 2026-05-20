@@ -186,8 +186,7 @@ public class UCSBCurriculumControllerTests extends ControllerTestCase {
     when(ucsbCurriculumService.getAllRequirementCodes()).thenReturn(Arrays.asList("A1", "B"));
     when(ucsbCurriculumService.getPrimariesByGE(quarter, "A1"))
         .thenReturn(Arrays.asList(courseA, courseB));
-    when(ucsbCurriculumService.getPrimariesByGE(quarter, "B"))
-        .thenReturn(Arrays.asList(courseDup));
+    when(ucsbCurriculumService.getPrimariesByGE(quarter, "B")).thenReturn(Arrays.asList(courseDup));
 
     List<Primary> expectedCombined = Arrays.asList(courseA, courseB);
 
