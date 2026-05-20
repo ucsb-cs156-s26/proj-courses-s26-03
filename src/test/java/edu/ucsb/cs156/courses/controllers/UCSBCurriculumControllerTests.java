@@ -14,6 +14,7 @@ import edu.ucsb.cs156.courses.documents.CoursePageFixtures;
 import edu.ucsb.cs156.courses.documents.Primary;
 import edu.ucsb.cs156.courses.repositories.UserRepository;
 import edu.ucsb.cs156.courses.services.UCSBCurriculumService;
+import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -171,5 +172,37 @@ public class UCSBCurriculumControllerTests extends ControllerTestCase {
 
     String body = response.getResponse().getContentAsString();
     assertEquals(objectMapper.writeValueAsString(expectedConvertedPrimaries), body);
+  }
+
+  @Test
+  public void test_getPrimariesGE_all_deduplicates() throws Exception {
+    ObjectMapper objectMapper = new ObjectMapper();
+    String quarter = "20251";
+
+    Primary courseA = Primary.builder().courseId("CMPSC 16").title("Intro to CS").build();
+    Primary courseB = Primary.builder().courseId("MATH 3A").title("Calculus 1").build();
+    Primary courseDup = Primary.builder().courseId("CMPSC 16").title("Intro to CS").build();
+
+    when(ucsbCurriculumService.getAllRequirementCodes()).thenReturn(Arrays.asList("A1", "B"));
+    when(ucsbCurriculumService.getPrimariesByGE(quarter, "A1"))
+        .thenReturn(Arrays.asList(courseA, courseB));
+    when(ucsbCurriculumService.getPrimariesByGE(quarter, "B"))
+        .thenReturn(Arrays.asList(courseDup));
+
+    List<Primary> expectedCombined = Arrays.asList(courseA, courseB);
+
+    MvcResult response =
+        mockMvc
+            .perform(
+                get("/api/public/primariesge")
+                    .param("qtr", quarter)
+                    .param("area", "ALL")
+                    .contentType("application/json"))
+            .andExpect(status().isOk())
+            .andExpect(content().json(objectMapper.writeValueAsString(expectedCombined)))
+            .andReturn();
+
+    String body = response.getResponse().getContentAsString();
+    assertEquals(objectMapper.writeValueAsString(expectedCombined), body);
   }
 }

@@ -375,4 +375,16 @@ public class UCSBCurriculumService {
         .distinct()
         .collect(Collectors.toList());
   }
+
+  public List<String> getAllRequirementCodes() throws Exception {
+    String json = getGeneralEducationInfo();
+
+    List<GERequirement> allAreas =
+        objectMapper.readValue(json, new TypeReference<List<GERequirement>>() {});
+
+    return allAreas.stream()
+        .map(GERequirement::getRequirementCode)
+        .distinct()
+        .collect(Collectors.toList());
+  }
 }

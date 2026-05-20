@@ -6,7 +6,10 @@ import edu.ucsb.cs156.courses.services.UCSBCurriculumService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -57,12 +60,25 @@ public class UCSBCurriculumController extends ApiController {
     return primaries;
   }
 
-  @Operation(summary = "Get primaries for a given quarter and GE area")
+  @Operation(summary = "Get primaries for a given quarter and GE area (use 'ALL' for all areas)")
   @GetMapping(value = "/primariesge", produces = "application/json")
   public List<Primary> primariesGE(@RequestParam String qtr, @RequestParam String area)
       throws Exception {
-    List<Primary> primaries = ucsbCurriculumService.getPrimariesByGE(qtr, area);
-    return primaries;
+    if ("ALL".equals(area)) {
+      List<String> allCodes = ucsbCurriculumService.getAllRequirementCodes();
+      List<Primary> combined = new ArrayList<>();
+      Set<String> seen = new HashSet<>();
+      for (String code : allCodes) {
+        List<Primary> primaries = ucsbCurriculumService.getPrimariesByGE(qtr, code);
+        for (Primary p : primaries) {
+          if (seen.add(p.getCourseId())) {
+            combined.add(p);
+          }
+        }
+      }
+      return combined;
+    }
+    return ucsbCurriculumService.getPrimariesByGE(qtr, area);
   }
 
   // Backend for final exam info, similar to the above operation:
