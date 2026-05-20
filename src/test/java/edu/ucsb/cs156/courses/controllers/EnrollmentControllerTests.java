@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 
 import com.opencsv.bean.StatefulBeanToCsv;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
+import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 import edu.ucsb.cs156.courses.entities.EnrollmentDataPoint;
 import edu.ucsb.cs156.courses.models.EnrollmentCSV;
 import edu.ucsb.cs156.courses.repositories.EnrollmentDataPointRepository;
@@ -145,6 +146,36 @@ public class EnrollmentControllerTests {
 
     // Mock CSV writer to throw CsvDataTypeMismatchException
     doThrow(new CsvDataTypeMismatchException("bad data")).when(mockWriter).write(any(List.class));
+
+    when(enrollmentCSVService.getStatefulBeanToCSV(any())).thenReturn(mockWriter);
+
+    StreamingResponseBody body = enrollmentController.csvForQuarter(yyyyq).getBody();
+
+    IOException ex =
+        assertThrows(IOException.class, () -> body.writeTo(new ByteArrayOutputStream()));
+    assertTrue(ex.getMessage().contains("Error writing CSV file"));
+  }
+
+  @Test
+  public void testCsvForQuarter_csvRequiredFieldEmptyExceptionThrown() throws Exception {
+    String yyyyq = "20252";
+
+    EnrollmentDataPoint dataPoint =
+        EnrollmentDataPoint.builder()
+            .id(1L)
+            .yyyyq(yyyyq)
+            .courseId("CMPSC 156")
+            .section("0100")
+            .enrollCd("12345")
+            .enrollment(96)
+            .dateCreated(LocalDateTime.now())
+            .build();
+
+    when(enrollmentDataPointRepository.findByYyyyq(yyyyq)).thenReturn(List.of(dataPoint));
+
+    doThrow(new CsvRequiredFieldEmptyException(EnrollmentCSV.class, new java.util.ArrayList<>(), "missing field"))
+        .when(mockWriter)
+        .write(any(List.class));
 
     when(enrollmentCSVService.getStatefulBeanToCSV(any())).thenReturn(mockWriter);
 
