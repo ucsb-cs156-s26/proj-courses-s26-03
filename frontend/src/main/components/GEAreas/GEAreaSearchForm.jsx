@@ -37,7 +37,7 @@ const GEAreaSearchForm = ({ fetchJSON }) => {
   const [quarter, setQuarter] = useState(
     localQuarter || quarters[0]?.yyyyq || startQtr,
   );
-  const [area, setArea] = useState(localArea || "ALL");
+  const [area, setArea] = useState(localArea || areaCodes[0] || "");
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -64,9 +64,6 @@ const GEAreaSearchForm = ({ fetchJSON }) => {
                 value={area}
                 onChange={(e) => setArea(e.target.value)}
               >
-                <option data-testid="GEAreaSearch.Area-option-all" value="ALL">
-                  ALL
-                </option>
                 {areaCodes.map((code) => {
                   const testid = `GEAreaSearch.Area-option-${code}`;
                   return (
