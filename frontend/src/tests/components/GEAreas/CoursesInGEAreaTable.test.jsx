@@ -61,10 +61,21 @@ describe("CoursesInGEAreaTable tests", () => {
   });
 
   test("renders multiple GE areas comma-joined in GE Areas column", () => {
+    // Include one row from fixture + one row with null generalEducation so
+    // the || [] fallback is exercised in the same render pass that Stryker tracks.
+    const courses = [
+      primaryFixtures.f24_math_lowerDiv[0],
+      {
+        quarter: "20244",
+        courseId: "NULL GE",
+        title: "Null GE Course",
+        generalEducation: null,
+      },
+    ];
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
-          <CoursesInGEAreaTable courses={primaryFixtures.f24_math_lowerDiv} />
+          <CoursesInGEAreaTable courses={courses} />
         </MemoryRouter>
       </QueryClientProvider>,
     );
@@ -74,6 +85,11 @@ describe("CoursesInGEAreaTable tests", () => {
     expect(
       screen.getByTestId(`${testId}-cell-row-0-col-geAreas`).textContent,
     ).toBe("C (L&S), QNT (L&S)");
+
+    // null generalEducation must fall back to [] (empty), not produce garbage output
+    expect(
+      screen.getByTestId(`${testId}-cell-row-1-col-geAreas`).textContent,
+    ).toBe("");
   });
 
   test("renders empty GE Areas cell for courses with no GE data", () => {
@@ -196,5 +212,27 @@ describe("CoursesInGEAreaTable tests", () => {
     expect(
       screen.getByTestId(`${testId}-cell-row-0-col-unitsFixed`),
     ).toHaveTextContent("4");
+  });
+
+  test("courseId leading and trailing whitespace is trimmed", () => {
+    const courses = [
+      {
+        quarter: "20244",
+        courseId: " MATH 1A ",
+        title: "Test Course",
+        generalEducation: [],
+      },
+    ];
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <CoursesInGEAreaTable courses={courses} />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+    // Use .textContent (no whitespace normalization) to verify .trim() is applied
+    expect(
+      screen.getByTestId(`${testId}-cell-row-0-col-courseId`).textContent,
+    ).toBe("MATH 1A");
   });
 });
