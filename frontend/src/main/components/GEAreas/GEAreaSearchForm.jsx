@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Form, Button, Container, Row, Col } from "react-bootstrap";
 import { quarterRange } from "main/utils/quarterUtilities";
 
@@ -37,7 +37,14 @@ const GEAreaSearchForm = ({ fetchJSON }) => {
   const [quarter, setQuarter] = useState(
     localQuarter || quarters[0]?.yyyyq || startQtr,
   );
-  const [area, setArea] = useState(localArea || areaCodes[0] || "");
+  const [area, setArea] = useState(localArea || "");
+
+  // Once GE areas load from the API, default to the first one if nothing is selected
+  useEffect(() => {
+    if (!area && areaCodes.length > 0) {
+      setArea(areaCodes[0]);
+    }
+  }, [areaCodes.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSubmit = (event) => {
     event.preventDefault();
