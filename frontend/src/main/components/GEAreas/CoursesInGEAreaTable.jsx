@@ -25,14 +25,17 @@ export default function CoursesInGEAreaTable({ courses }) {
     {
       Header: "GE Areas",
       id: "geAreas",
-      cell: ({ cell }) =>
-        (cell.row.original.generalEducation || [])
+      cell: ({ cell }) => {
+        const ges = cell.row.original.generalEducation;
+        if (!ges) return "";
+        return ges
           .map((ge) => {
             const code = ge.geCode?.trim();
             const college = ge.geCollege?.trim();
             return college ? `${code} (${college})` : code;
           })
-          .join(", "),
+          .join(", ");
+      },
     },
   ];
 
