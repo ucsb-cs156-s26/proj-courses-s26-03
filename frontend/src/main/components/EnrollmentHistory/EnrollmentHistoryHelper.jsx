@@ -1,4 +1,21 @@
+// Stryker disable all
+const MONTH_NAMES = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
 const quarterLabel = { 1: "W", 2: "S", 3: "M", 4: "F" };
+// Stryker restore all
 
 // Converts yyyyq (e.g. "20252") to a short display label (e.g. "S25")
 export const formatQuarter = (yyyyq) => {
@@ -7,30 +24,38 @@ export const formatQuarter = (yyyyq) => {
   return `${quarterLabel[qtr] || "?"}${year}`;
 };
 
-// Returns a new array sorted by yyyyq ascending (oldest quarter first)
-export const sortByQuarter = (data) => {
-  return [...data].sort((a, b) => a.yyyyq.localeCompare(b.yyyyq));
+// Converts a UTC ms timestamp to a display string like "Mar 01"
+export const formatDateForAxis = (timestamp) => {
+  const date = new Date(timestamp);
+  const month = MONTH_NAMES[date.getUTCMonth()];
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  return `${month} ${day}`;
 };
 
-// Returns sorted unique section strings present in the data
-export const getUniqueSections = (data) => {
-  return [...new Set(data.map((item) => item.section))].sort();
+// Returns a new array sorted by dateCreated ascending (oldest first)
+export const sortByDateCreated = (data) => {
+  return [...data].sort(
+    (a, b) =>
+      new Date(a.dateCreated).getTime() - new Date(b.dateCreated).getTime(),
+  );
 };
 
-// Transforms raw enrollment data into a Recharts-friendly format.
-// Returns one object per quarter with section enrollment counts as keys:
-// e.g. [{ quarter: "S25", "0100": 196, "0200": 176 }, ...]
-export const buildEnrollmentByQuarter = (data) => {
-  const sorted = sortByQuarter(data);
-  const quarterMap = {};
-
-  sorted.forEach((item) => {
-    const label = formatQuarter(item.yyyyq);
-    if (!quarterMap[label]) {
-      quarterMap[label] = { quarter: label };
-    }
-    quarterMap[label][item.section] = item.enrollment;
+// Groups enrollment data by "yyyyq-section" key
+export const groupBySectionAndQuarter = (data) => {
+  const groups = {};
+  data.forEach((item) => {
+    const key = `${item.yyyyq}-${item.section}`;
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(item);
   });
+  return groups;
+};
 
-  return Object.values(quarterMap);
+// Transforms section data into a Recharts-friendly time series.
+// Returns [{ timestamp: ms, enrollment: number }, ...] sorted oldest first.
+export const buildTimeSeries = (sectionData) => {
+  return sortByDateCreated(sectionData).map((item) => ({
+    timestamp: new Date(item.dateCreated).getTime(),
+    enrollment: item.enrollment,
+  }));
 };

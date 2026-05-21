@@ -1,9 +1,14 @@
-import { enrollmentHistoryFixtures } from "fixtures/enrollmentHistoryFixtures";
+import {
+  enrollmentHistoryFixtures,
+  passTimes2025Spring,
+  passTimes2024Spring,
+} from "fixtures/enrollmentHistoryFixtures";
 import {
   formatQuarter,
-  sortByQuarter,
-  getUniqueSections,
-  buildEnrollmentByQuarter,
+  formatDateForAxis,
+  sortByDateCreated,
+  groupBySectionAndQuarter,
+  buildTimeSeries,
 } from "main/components/EnrollmentHistory/EnrollmentHistoryHelper";
 
 describe("formatQuarter", () => {
@@ -28,89 +33,130 @@ describe("formatQuarter", () => {
   });
 });
 
-describe("sortByQuarter", () => {
-  it("sorts data from oldest to newest quarter", () => {
+describe("formatDateForAxis", () => {
+  it("formats a March date correctly", () => {
+    const ts = new Date("2025-03-01T00:00:00Z").getTime();
+    expect(formatDateForAxis(ts)).toBe("Mar 01");
+  });
+
+  it("formats a November date correctly", () => {
+    const ts = new Date("2024-11-15T00:00:00Z").getTime();
+    expect(formatDateForAxis(ts)).toBe("Nov 15");
+  });
+
+  it("pads single-digit days with a leading zero", () => {
+    const ts = new Date("2025-02-03T00:00:00Z").getTime();
+    expect(formatDateForAxis(ts)).toBe("Feb 03");
+  });
+});
+
+describe("sortByDateCreated", () => {
+  it("sorts data from oldest to newest dateCreated", () => {
     const unsorted = [
-      { yyyyq: "20252", section: "0100", enrollment: 196 },
-      { yyyyq: "20234", section: "0100", enrollment: 120 },
-      { yyyyq: "20244", section: "0100", enrollment: 135 },
+      { dateCreated: "2025-04-01T10:00:00Z", enrollment: 196 },
+      { dateCreated: "2025-01-15T10:00:00Z", enrollment: 20 },
+      { dateCreated: "2025-02-18T08:00:00Z", enrollment: 152 },
     ];
-    const result = sortByQuarter(unsorted);
-    expect(result.map((d) => d.yyyyq)).toEqual(["20234", "20244", "20252"]);
+    const result = sortByDateCreated(unsorted);
+    expect(result.map((d) => d.enrollment)).toEqual([20, 152, 196]);
   });
 
   it("does not mutate the original array", () => {
-    const original = [
-      { yyyyq: "20252", section: "0100", enrollment: 196 },
-      { yyyyq: "20234", section: "0100", enrollment: 120 },
-    ];
+    const original = enrollmentHistoryFixtures.fiveSnapshotsSingleSection;
     const copy = [...original];
-    sortByQuarter(original);
+    sortByDateCreated(original);
     expect(original).toEqual(copy);
   });
 });
 
-describe("getUniqueSections", () => {
-  it("returns a single section when data has one section", () => {
-    const result = getUniqueSections(
-      enrollmentHistoryFixtures.fiveQuartersOneSection,
+describe("groupBySectionAndQuarter", () => {
+  it("creates a single group for one section-quarter combination", () => {
+    const groups = groupBySectionAndQuarter(
+      enrollmentHistoryFixtures.fiveSnapshotsSingleSection,
     );
-    expect(result).toEqual(["0100"]);
+    const keys = Object.keys(groups);
+    expect(keys).toEqual(["20252-0100"]);
+    expect(groups["20252-0100"]).toHaveLength(5);
   });
 
-  it("returns sorted unique sections when data has multiple sections", () => {
-    const result = getUniqueSections(
-      enrollmentHistoryFixtures.threeQuartersTwoSections,
+  it("creates two groups for two sections in the same quarter", () => {
+    const groups = groupBySectionAndQuarter(
+      enrollmentHistoryFixtures.tenSnapshotsTwoSections,
     );
-    expect(result).toEqual(["0100", "0200"]);
+    const keys = Object.keys(groups).sort();
+    expect(keys).toEqual(["20252-0100", "20252-0200"]);
+    expect(groups["20252-0100"]).toHaveLength(3);
+    expect(groups["20252-0200"]).toHaveLength(3);
   });
 
-  it("sorts sections alphabetically regardless of input order", () => {
-    const data = [
-      { section: "0300" },
-      { section: "0100" },
-      { section: "0200" },
-    ];
-    expect(getUniqueSections(data)).toEqual(["0100", "0200", "0300"]);
+  it("assigns each item to the correct group", () => {
+    const groups = groupBySectionAndQuarter(
+      enrollmentHistoryFixtures.tenSnapshotsTwoSections,
+    );
+    groups["20252-0100"].forEach((item) => {
+      expect(item.section).toBe("0100");
+      expect(item.yyyyq).toBe("20252");
+    });
+    groups["20252-0200"].forEach((item) => {
+      expect(item.section).toBe("0200");
+      expect(item.yyyyq).toBe("20252");
+    });
   });
 });
 
-describe("buildEnrollmentByQuarter", () => {
-  it("builds one entry per quarter for a single-section course", () => {
-    const result = buildEnrollmentByQuarter(
-      enrollmentHistoryFixtures.fiveQuartersOneSection,
+describe("buildTimeSeries", () => {
+  it("converts dateCreated strings to UTC ms timestamps", () => {
+    const result = buildTimeSeries(
+      enrollmentHistoryFixtures.fiveSnapshotsSingleSection,
     );
-    expect(result).toEqual([
-      { quarter: "F23", "0100": 120 },
-      { quarter: "S24", "0100": 148 },
-      { quarter: "F24", "0100": 135 },
-      { quarter: "S25", "0100": 196 },
-      { quarter: "F25", "0100": 180 },
-    ]);
+    expect(result[0].timestamp).toBe(
+      new Date("2025-01-15T10:00:00Z").getTime(),
+    );
   });
 
-  it("builds one entry per quarter with both sections for a multi-section course", () => {
-    const result = buildEnrollmentByQuarter(
-      enrollmentHistoryFixtures.threeQuartersTwoSections,
+  it("preserves enrollment values", () => {
+    const result = buildTimeSeries(
+      enrollmentHistoryFixtures.fiveSnapshotsSingleSection,
     );
-    expect(result).toEqual([
-      { quarter: "S24", "0100": 148, "0200": 132 },
-      { quarter: "F24", "0100": 135, "0200": 117 },
-      { quarter: "S25", "0100": 196, "0200": 176 },
-    ]);
+    expect(result.map((d) => d.enrollment)).toEqual([20, 88, 152, 185, 196]);
   });
 
-  it("handles unsorted input by sorting before building", () => {
-    const unsorted = [
-      enrollmentHistoryFixtures.fiveQuartersOneSection[2], // F24
-      enrollmentHistoryFixtures.fiveQuartersOneSection[0], // F23
-      enrollmentHistoryFixtures.fiveQuartersOneSection[3], // S25
-    ];
-    const result = buildEnrollmentByQuarter(unsorted);
-    expect(result.map((d) => d.quarter)).toEqual(["F23", "F24", "S25"]);
+  it("returns data sorted oldest first regardless of input order", () => {
+    const reversed = [
+      ...enrollmentHistoryFixtures.fiveSnapshotsSingleSection,
+    ].reverse();
+    const result = buildTimeSeries(reversed);
+    const timestamps = result.map((d) => d.timestamp);
+    expect(timestamps).toEqual([...timestamps].sort((a, b) => a - b));
   });
 
   it("returns an empty array for empty input", () => {
-    expect(buildEnrollmentByQuarter([])).toEqual([]);
+    expect(buildTimeSeries([])).toEqual([]);
+  });
+});
+
+describe("passTimes2025Spring fixture", () => {
+  it("has three pass time entries with label and date", () => {
+    expect(passTimes2025Spring).toHaveLength(3);
+    expect(passTimes2025Spring[0].label).toBe("Pass 1");
+    expect(passTimes2025Spring[1].label).toBe("Pass 2");
+    expect(passTimes2025Spring[2].label).toBe("Pass 3");
+    passTimes2025Spring.forEach((p) => {
+      expect(p.label).toBeTruthy();
+      expect(new Date(p.date).getTime()).toBeGreaterThan(0);
+    });
+  });
+});
+
+describe("passTimes2024Spring fixture", () => {
+  it("has three pass time entries with label and date", () => {
+    expect(passTimes2024Spring).toHaveLength(3);
+    expect(passTimes2024Spring[0].label).toBe("Pass 1");
+    expect(passTimes2024Spring[1].label).toBe("Pass 2");
+    expect(passTimes2024Spring[2].label).toBe("Pass 3");
+    passTimes2024Spring.forEach((p) => {
+      expect(p.label).toBeTruthy();
+      expect(new Date(p.date).getTime()).toBeGreaterThan(0);
+    });
   });
 });

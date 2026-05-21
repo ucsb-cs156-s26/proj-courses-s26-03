@@ -1,7 +1,11 @@
 import React from "react";
 
 import EnrollmentHistoryGraph from "main/components/EnrollmentHistory/EnrollmentHistoryGraph";
-import { enrollmentHistoryFixtures } from "fixtures/enrollmentHistoryFixtures";
+import {
+  enrollmentHistoryFixtures,
+  passTimes2025Spring,
+  passTimes2024Spring,
+} from "fixtures/enrollmentHistoryFixtures";
 
 export default {
   title: "components/EnrollmentHistory/EnrollmentHistoryGraph",
@@ -15,17 +19,25 @@ Empty.args = {
   enrollmentHistory: [],
 };
 
-export const FiveQuartersOneSection = Template.bind({});
-FiveQuartersOneSection.args = {
-  enrollmentHistory: enrollmentHistoryFixtures.fiveQuartersOneSection,
+export const SingleSectionNoPassTimes = Template.bind({});
+SingleSectionNoPassTimes.args = {
+  enrollmentHistory: enrollmentHistoryFixtures.fiveSnapshotsSingleSection,
 };
 
-export const ThreeQuartersTwoSections = Template.bind({});
-ThreeQuartersTwoSections.args = {
-  enrollmentHistory: enrollmentHistoryFixtures.threeQuartersTwoSections,
+export const SingleSectionWithPassTimes = Template.bind({});
+SingleSectionWithPassTimes.args = {
+  enrollmentHistory: enrollmentHistoryFixtures.fiveSnapshotsSingleSection,
+  passTimes: passTimes2025Spring,
 };
 
-export const ThreeQuartersWithSuffix = Template.bind({});
-ThreeQuartersWithSuffix.args = {
-  enrollmentHistory: enrollmentHistoryFixtures.threeQuartersWithSuffix,
+export const TwoSectionsWithPassTimes = Template.bind({});
+TwoSectionsWithPassTimes.args = {
+  enrollmentHistory: enrollmentHistoryFixtures.tenSnapshotsTwoSections,
+  passTimes: passTimes2025Spring,
+};
+
+export const PastQuarterWithPassTimes = Template.bind({});
+PastQuarterWithPassTimes.args = {
+  enrollmentHistory: enrollmentHistoryFixtures.fiveSnapshotsPastQuarter,
+  passTimes: passTimes2024Spring,
 };

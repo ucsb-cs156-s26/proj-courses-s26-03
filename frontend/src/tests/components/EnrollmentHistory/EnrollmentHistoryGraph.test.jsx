@@ -1,6 +1,9 @@
 import { vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
-import { enrollmentHistoryFixtures } from "fixtures/enrollmentHistoryFixtures";
+import {
+  enrollmentHistoryFixtures,
+  passTimes2025Spring,
+} from "fixtures/enrollmentHistoryFixtures";
 import { QueryClient, QueryClientProvider } from "react-query";
 import { MemoryRouter } from "react-router-dom";
 import EnrollmentHistoryGraph from "main/components/EnrollmentHistory/EnrollmentHistoryGraph";
@@ -48,62 +51,62 @@ describe("EnrollmentHistoryGraph", () => {
       screen.getByTestId("enrollment-history-graph-empty"),
     ).toBeInTheDocument();
     expect(
-      screen.queryByTestId("enrollment-history-graph"),
+      screen.queryByTestId("enrollment-history-graphs"),
     ).not.toBeInTheDocument();
   });
 
-  test("renders graph container when data is provided", () => {
+  test("renders the graphs container when data is provided", () => {
     renderGraph({
-      enrollmentHistory: enrollmentHistoryFixtures.fiveQuartersOneSection,
+      enrollmentHistory: enrollmentHistoryFixtures.fiveSnapshotsSingleSection,
     });
-    expect(screen.getByTestId("enrollment-history-graph")).toBeInTheDocument();
+    expect(screen.getByTestId("enrollment-history-graphs")).toBeInTheDocument();
   });
 
-  test("renders Enrollment History heading", () => {
+  test("renders one chart for a single section-quarter group", async () => {
     renderGraph({
-      enrollmentHistory: enrollmentHistoryFixtures.fiveQuartersOneSection,
-    });
-    expect(screen.getByText("Enrollment History")).toBeInTheDocument();
-  });
-
-  test("renders a line in the chart for a single-section course", async () => {
-    renderGraph({
-      enrollmentHistory: enrollmentHistoryFixtures.fiveQuartersOneSection,
-    });
-    const container = screen.getByTestId("enrollment-history-graph");
-    await waitFor(() => {
-      const lines = container.querySelectorAll(".recharts-line");
-      expect(lines.length).toBe(1);
-    });
-  });
-
-  test("renders two lines for a multi-section course", async () => {
-    renderGraph({
-      enrollmentHistory: enrollmentHistoryFixtures.threeQuartersTwoSections,
-    });
-    const container = screen.getByTestId("enrollment-history-graph");
-    await waitFor(() => {
-      const lines = container.querySelectorAll(".recharts-line");
-      expect(lines.length).toBe(2);
-    });
-  });
-
-  test("section labels appear in the legend for single-section data", async () => {
-    renderGraph({
-      enrollmentHistory: enrollmentHistoryFixtures.fiveQuartersOneSection,
+      enrollmentHistory: enrollmentHistoryFixtures.fiveSnapshotsSingleSection,
     });
     await waitFor(() => {
-      expect(screen.getByText("0100")).toBeInTheDocument();
+      expect(screen.getAllByTestId("enrollment-history-graph")).toHaveLength(1);
     });
   });
 
-  test("both section labels appear in the legend for multi-section data", async () => {
+  test("renders two charts for two section-quarter groups", async () => {
     renderGraph({
-      enrollmentHistory: enrollmentHistoryFixtures.threeQuartersTwoSections,
+      enrollmentHistory: enrollmentHistoryFixtures.tenSnapshotsTwoSections,
     });
     await waitFor(() => {
-      expect(screen.getByText("0100")).toBeInTheDocument();
-      expect(screen.getByText("0200")).toBeInTheDocument();
+      expect(screen.getAllByTestId("enrollment-history-graph")).toHaveLength(2);
+    });
+  });
+
+  test("chart title includes section and formatted quarter", () => {
+    renderGraph({
+      enrollmentHistory: enrollmentHistoryFixtures.fiveSnapshotsSingleSection,
+    });
+    expect(screen.getByText("Section 0100 - S25")).toBeInTheDocument();
+  });
+
+  test("renders reference lines when passTimes are provided", async () => {
+    renderGraph({
+      enrollmentHistory: enrollmentHistoryFixtures.fiveSnapshotsSingleSection,
+      passTimes: passTimes2025Spring,
+    });
+    const container = screen.getByTestId("enrollment-history-graphs");
+    await waitFor(() => {
+      const refLines = container.querySelectorAll(".recharts-reference-line");
+      expect(refLines.length).toBe(3);
+    });
+  });
+
+  test("renders no reference lines when passTimes is not provided", async () => {
+    renderGraph({
+      enrollmentHistory: enrollmentHistoryFixtures.fiveSnapshotsSingleSection,
+    });
+    const container = screen.getByTestId("enrollment-history-graphs");
+    await waitFor(() => {
+      const refLines = container.querySelectorAll(".recharts-reference-line");
+      expect(refLines.length).toBe(0);
     });
   });
 });

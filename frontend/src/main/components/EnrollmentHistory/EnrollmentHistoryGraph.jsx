@@ -7,50 +7,79 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
+  ReferenceLine,
 } from "recharts";
 import {
-  buildEnrollmentByQuarter,
-  getUniqueSections,
+  buildTimeSeries,
+  groupBySectionAndQuarter,
+  formatDateForAxis,
+  formatQuarter,
 } from "main/components/EnrollmentHistory/EnrollmentHistoryHelper";
 
-// Stryker disable all
-const SECTION_COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff7f7f", "#a4de6c"];
-// Stryker restore all
+const EnrollmentLineChart = ({ data, title, passTimes }) => {
+  const timeSeriesData = buildTimeSeries(data);
 
-const EnrollmentHistoryGraph = ({ enrollmentHistory }) => {
+  return (
+    <div data-testid="enrollment-history-graph">
+      <h3>{title}</h3>
+      <ResponsiveContainer width="100%" height={300}>
+        <LineChart
+          data={timeSeriesData}
+          // Stryker disable next-line all
+          margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+        >
+          <XAxis
+            dataKey="timestamp"
+            type="number"
+            scale="time"
+            // Stryker disable next-line all
+            domain={["auto", "auto"]}
+            tickFormatter={formatDateForAxis}
+          />
+          <YAxis />
+          <Legend />
+          <Tooltip labelFormatter={formatDateForAxis} />
+          <Line
+            type="monotone"
+            dataKey="enrollment"
+            stroke="#8884d8"
+            // Stryker disable next-line all
+            dot={false}
+          />
+          {passTimes &&
+            passTimes.map((pass) => (
+              <ReferenceLine
+                key={pass.label}
+                // Stryker disable next-line all
+                x={new Date(pass.date).getTime()}
+                stroke="#ff7300"
+                // Stryker disable next-line all
+                label={{ value: pass.label, position: "insideTopRight" }}
+              />
+            ))}
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
+
+const EnrollmentHistoryGraph = ({ enrollmentHistory, passTimes }) => {
   if (!enrollmentHistory || enrollmentHistory.length === 0) {
     return <div data-testid="enrollment-history-graph-empty" />;
   }
 
-  const chartData = buildEnrollmentByQuarter(enrollmentHistory);
-  const sections = getUniqueSections(enrollmentHistory);
+  const groups = groupBySectionAndQuarter(enrollmentHistory);
 
   return (
-    <div data-testid="enrollment-history-graph">
-      <h3>Enrollment History</h3>
-      <ResponsiveContainer width="100%" height={300}>
-        <LineChart
-          data={chartData}
-          // Stryker disable next-line all
-          margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-        >
-          <XAxis dataKey="quarter" />
-          <YAxis />
-          <Legend />
-          <Tooltip />
-          {sections.map((section, idx) => (
-            <Line
-              key={section}
-              type="monotone"
-              dataKey={section}
-              // Stryker disable next-line ArithmeticOperator
-              stroke={SECTION_COLORS[idx % SECTION_COLORS.length]}
-              // Stryker disable next-line all
-              activeDot={{ r: 8 }}
-            />
-          ))}
-        </LineChart>
-      </ResponsiveContainer>
+    <div data-testid="enrollment-history-graphs">
+      {Object.entries(groups).map(([key, sectionData]) => (
+        <EnrollmentLineChart
+          key={key}
+          data={sectionData}
+          title={`Section ${sectionData[0].section} - ${formatQuarter(sectionData[0].yyyyq)}`}
+          passTimes={passTimes}
+        />
+      ))}
     </div>
   );
 };
