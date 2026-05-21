@@ -56,9 +56,7 @@ describe("EnrollmentHistoryGraph", () => {
     renderGraph({
       enrollmentHistory: enrollmentHistoryFixtures.fiveQuartersOneSection,
     });
-    expect(
-      screen.getByTestId("enrollment-history-graph"),
-    ).toBeInTheDocument();
+    expect(screen.getByTestId("enrollment-history-graph")).toBeInTheDocument();
   });
 
   test("renders Enrollment History heading", () => {

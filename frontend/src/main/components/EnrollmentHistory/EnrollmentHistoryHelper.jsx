@@ -1,4 +1,4 @@
-const quarterLabel = { "1": "W", "2": "S", "3": "M", "4": "F" };
+const quarterLabel = { 1: "W", 2: "S", 3: "M", 4: "F" };
 
 // Converts yyyyq (e.g. "20252") to a short display label (e.g. "S25")
 export const formatQuarter = (yyyyq) => {
