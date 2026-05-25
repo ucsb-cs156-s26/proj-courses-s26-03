@@ -39,9 +39,7 @@ describe("ErrorPage tests", () => {
   test("renders the heading and lead text", async () => {
     useBackend.mockReturnValue({ data: null });
     renderPage();
-    expect(
-      await screen.findByTestId("error-page-heading"),
-    ).toBeInTheDocument();
+    expect(await screen.findByTestId("error-page-heading")).toBeInTheDocument();
     expect(
       screen.getByText(/We encountered an unexpected error/),
     ).toBeInTheDocument();
@@ -50,9 +48,7 @@ describe("ErrorPage tests", () => {
   test("renders return home link", async () => {
     useBackend.mockReturnValue({ data: null });
     renderPage();
-    expect(
-      await screen.findByTestId("return-home-link"),
-    ).toBeInTheDocument();
+    expect(await screen.findByTestId("return-home-link")).toBeInTheDocument();
   });
 
   test("shows no error details when data is null", async () => {
@@ -96,7 +92,8 @@ describe("ErrorPage tests", () => {
         error: "Internal Server Error",
         message: "Something went wrong",
         path: "/api/test",
-        trace: "java.lang.RuntimeException: Something went wrong\n\tat Foo.bar(Foo.java:42)",
+        trace:
+          "java.lang.RuntimeException: Something went wrong\n\tat Foo.bar(Foo.java:42)",
       },
     });
 
@@ -120,9 +117,7 @@ describe("ErrorPage tests", () => {
     renderPage();
 
     await screen.findByTestId("error-status");
-    expect(
-      screen.queryByTestId("toggle-trace-button"),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByTestId("toggle-trace-button")).not.toBeInTheDocument();
   });
 
   test("clicking toggle button shows and hides technical details", async () => {
@@ -132,7 +127,8 @@ describe("ErrorPage tests", () => {
         error: "Internal Server Error",
         message: "Something went wrong",
         path: "/api/test",
-        trace: "java.lang.RuntimeException: Something went wrong\n\tat Foo.bar(Foo.java:42)",
+        trace:
+          "java.lang.RuntimeException: Something went wrong\n\tat Foo.bar(Foo.java:42)",
       },
     });
 
@@ -155,7 +151,8 @@ describe("ErrorPage tests", () => {
         error: "Internal Server Error",
         message: "Something went wrong",
         path: "/api/test",
-        trace: "java.lang.RuntimeException: Something went wrong\n\tat Foo.bar(Foo.java:42)",
+        trace:
+          "java.lang.RuntimeException: Something went wrong\n\tat Foo.bar(Foo.java:42)",
       },
     });
 
