@@ -14,8 +14,11 @@ import edu.ucsb.cs156.courses.documents.CoursePageFixtures;
 import edu.ucsb.cs156.courses.documents.Primary;
 import edu.ucsb.cs156.courses.repositories.UserRepository;
 import edu.ucsb.cs156.courses.services.UCSBCurriculumService;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -155,10 +158,18 @@ public class UCSBCurriculumControllerTests extends ControllerTestCase {
     String expectedCoursePageJSON = CoursePageFixtures.COURSE_PAGE_JSON;
     CoursePage expectedCoursePage =
         objectMapper.readValue(expectedCoursePageJSON, CoursePage.class);
-    List<Primary> expectedConvertedPrimaries = expectedCoursePage.getPrimaries();
+    List<Primary> allPrimaries = expectedCoursePage.getPrimaries();
 
-    when(ucsbCurriculumService.getPrimariesByGE(quarter, area))
-        .thenReturn(expectedConvertedPrimaries);
+    // Compute the deduplicated list the same way the controller does
+    Set<String> seen = new HashSet<>();
+    List<Primary> expectedDeduped = new ArrayList<>();
+    for (Primary p : allPrimaries) {
+      if (seen.add(p.getCourseId())) {
+        expectedDeduped.add(p);
+      }
+    }
+
+    when(ucsbCurriculumService.getPrimariesByGE(quarter, area)).thenReturn(allPrimaries);
     MvcResult response =
         mockMvc
             .perform(
@@ -167,11 +178,11 @@ public class UCSBCurriculumControllerTests extends ControllerTestCase {
                     .param("area", area)
                     .contentType("application/json"))
             .andExpect(status().isOk())
-            .andExpect(content().json(objectMapper.writeValueAsString(expectedConvertedPrimaries)))
+            .andExpect(content().json(objectMapper.writeValueAsString(expectedDeduped)))
             .andReturn();
 
     String body = response.getResponse().getContentAsString();
-    assertEquals(objectMapper.writeValueAsString(expectedConvertedPrimaries), body);
+    assertEquals(objectMapper.writeValueAsString(expectedDeduped), body);
   }
 
   @Test

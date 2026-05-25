@@ -78,7 +78,15 @@ public class UCSBCurriculumController extends ApiController {
       }
       return combined;
     }
-    return ucsbCurriculumService.getPrimariesByGE(qtr, area);
+    List<Primary> primaries = ucsbCurriculumService.getPrimariesByGE(qtr, area);
+    Set<String> seen = new HashSet<>();
+    List<Primary> deduped = new ArrayList<>();
+    for (Primary p : primaries) {
+      if (seen.add(p.getCourseId())) {
+        deduped.add(p);
+      }
+    }
+    return deduped;
   }
 
   // Backend for final exam info, similar to the above operation:
