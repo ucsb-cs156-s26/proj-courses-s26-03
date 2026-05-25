@@ -78,7 +78,15 @@ import org.springframework.web.bind.annotation.RestController;
 <span class="fc" id="L78">      }</span>
 <span class="fc" id="L79">      return combined;</span>
     }
-<span class="fc" id="L81">    return ucsbCurriculumService.getPrimariesByGE(qtr, area);</span>
+<span class="fc" id="L81">    List&lt;Primary&gt; primaries = ucsbCurriculumService.getPrimariesByGE(qtr, area);</span>
+<span class="fc" id="L82">    Set&lt;String&gt; seen = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L83">    List&lt;Primary&gt; deduped = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L84" title="All 2 branches covered.">    for (Primary p : primaries) {</span>
+<span class="fc bfc" id="L85" title="All 2 branches covered.">      if (seen.add(p.getCourseId())) {</span>
+<span class="fc" id="L86">        deduped.add(p);</span>
+      }
+<span class="fc" id="L88">    }</span>
+<span class="fc" id="L89">    return deduped;</span>
   }
 
   // Backend for final exam info, similar to the above operation:
@@ -88,9 +96,9 @@ import org.springframework.web.bind.annotation.RestController;
       @RequestParam String quarterYYYYQ, @RequestParam String enrollCd)
       throws Exception { // Looks for quarter and code
 
-<span class="fc" id="L91">    String body = ucsbCurriculumService.getFinalsInfo(quarterYYYYQ, enrollCd);</span>
+<span class="fc" id="L99">    String body = ucsbCurriculumService.getFinalsInfo(quarterYYYYQ, enrollCd);</span>
 
-<span class="fc" id="L93">    return ResponseEntity.ok().body(body);</span>
+<span class="fc" id="L101">    return ResponseEntity.ok().body(body);</span>
   }
 
   @Operation(summary = &quot;Get General Education areas, optionally filtered by collegeCode&quot;)
@@ -101,14 +109,14 @@ import org.springframework.web.bind.annotation.RestController;
           String collegeCode)
       throws Exception {
 
-<span class="fc bfc" id="L104" title="All 2 branches covered.">    if (collegeCode != null) {</span>
+<span class="fc bfc" id="L112" title="All 2 branches covered.">    if (collegeCode != null) {</span>
       // returns List&lt;String&gt; of requirementCode
-<span class="fc" id="L106">      List&lt;String&gt; codes = ucsbCurriculumService.getRequirementCodesByCollege(collegeCode);</span>
-<span class="fc" id="L107">      return ResponseEntity.ok().body(codes);</span>
+<span class="fc" id="L114">      List&lt;String&gt; codes = ucsbCurriculumService.getRequirementCodesByCollege(collegeCode);</span>
+<span class="fc" id="L115">      return ResponseEntity.ok().body(codes);</span>
     } else {
       // returns the full raw JSON array
-<span class="fc" id="L110">      String body = ucsbCurriculumService.getGeneralEducationInfo();</span>
-<span class="fc" id="L111">      return ResponseEntity.ok().body(body);</span>
+<span class="fc" id="L118">      String body = ucsbCurriculumService.getGeneralEducationInfo();</span>
+<span class="fc" id="L119">      return ResponseEntity.ok().body(body);</span>
     }
   }
 }
