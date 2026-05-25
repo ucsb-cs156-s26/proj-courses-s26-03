@@ -19,7 +19,7 @@ courses,edu.ucsb.cs156.courses.controllers,CoursesCSVController,0,256,0,8,0,55,0
 courses,edu.ucsb.cs156.courses.controllers,CourseOverTimeBuildingController,0,101,0,12,0,23,0,13,0,7
 courses,edu.ucsb.cs156.courses.controllers,CourseOverTimeController,0,97,0,2,0,16,0,4,0,3
 courses,edu.ucsb.cs156.courses.controllers,UCSBSubjectsController,0,73,0,0,0,17,0,9,0,9
-courses,edu.ucsb.cs156.courses.documents,CoursePage,0,229,0,18,0,64,0,15,0,6
+courses,edu.ucsb.cs156.courses.documents,CoursePage,0,232,0,18,0,65,0,15,0,6
 courses,edu.ucsb.cs156.courses.documents,ConvertedSection.ConvertedSectionSortDescendingByQuarterComparator,0,11,0,0,0,2,0,2,0,2
 courses,edu.ucsb.cs156.courses.documents,ConvertedSection,0,115,0,6,0,30,0,11,0,8
 courses,edu.ucsb.cs156.courses.documents,Course,0,4,0,0,0,1,0,1,0,1
