@@ -19,6 +19,10 @@ export default function CoursesInGEAreaTable({ courses }) {
       accessor: "title",
     },
     {
+      Header: "Units",
+      accessor: "unitsFixed",
+    },
+    {
       Header: "GE Areas",
       id: "geAreas",
       cell: ({ cell }) => {

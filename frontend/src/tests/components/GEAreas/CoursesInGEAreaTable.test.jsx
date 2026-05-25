@@ -8,7 +8,7 @@ import primaryFixtures from "fixtures/primaryFixtures";
 describe("CoursesInGEAreaTable tests", () => {
   const queryClient = new QueryClient();
   const testId = "CoursesInGEAreaTable";
-  const expectedHeaders = ["Quarter", "Course ID", "Title", "GE Areas"];
+  const expectedHeaders = ["Quarter", "Course ID", "Title", "Units", "GE Areas"];
 
   test("renders empty table with correct headers", () => {
     render(
@@ -184,6 +184,28 @@ describe("CoursesInGEAreaTable tests", () => {
     expect(
       screen.getByTestId(`${testId}-cell-row-0-col-geAreas`),
     ).toBeInTheDocument();
+  });
+
+  test("renders unitsFixed value in Units column", () => {
+    const courses = [
+      {
+        quarter: "20244",
+        courseId: "TEST 4A",
+        title: "Test Course",
+        unitsFixed: 4,
+        generalEducation: [],
+      },
+    ];
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <CoursesInGEAreaTable courses={courses} />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+    expect(
+      screen.getByTestId(`${testId}-cell-row-0-col-unitsFixed`),
+    ).toHaveTextContent("4");
   });
 
   test("courseId leading and trailing whitespace is trimmed", () => {

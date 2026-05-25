@@ -128,6 +128,7 @@ public class CoursePage {
               .courseId(course.getCourseId())
               .title(course.getTitle())
               .description(course.getDescription())
+              .unitsFixed(course.getUnitsFixed())
               .primary(thisSection)
               .subRows(secondaries)
               .generalEducation(course.getGeneralEducation())
