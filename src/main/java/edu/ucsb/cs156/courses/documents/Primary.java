@@ -19,6 +19,7 @@ public class Primary {
   private String courseId;
   private String title;
   private String description;
+  private Integer unitsFixed;
   private Section primary;
   private List<Section> subRows;
   private List<GeneralEducation> generalEducation;

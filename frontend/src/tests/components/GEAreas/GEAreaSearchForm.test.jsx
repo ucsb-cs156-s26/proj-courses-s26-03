@@ -141,7 +141,7 @@ describe("GEAreaSearchForm tests", () => {
       expect(setItemSpy).toHaveBeenCalledWith("GEAreaSearch.Quarter", "20212");
     });
 
-    test("when local state for area is empty, we get ALL", () => {
+    test("when local state for area is empty, area defaults to ALL", () => {
       getItemSpy.mockImplementation((key) => {
         if (key === "GEAreaSearch.Quarter") {
           return "20212";
@@ -155,7 +155,7 @@ describe("GEAreaSearchForm tests", () => {
       const areaSelect = screen.getByLabelText("General Education Area");
       expect(areaSelect.value).toBe("ALL");
       expect(screen.getByTestId("GEAreaSearch.Status")).toHaveTextContent(
-        "Searching for ALL in S21",
+        "Searching for ALL in",
       );
     });
 

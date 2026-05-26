@@ -15,13 +15,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.ucsb.cs156.courses.ControllerTestCase;
 import edu.ucsb.cs156.courses.collections.ConvertedSectionCollection;
 import edu.ucsb.cs156.courses.entities.Job;
+import edu.ucsb.cs156.courses.jobs.UpdateCourseDataJob;
 import edu.ucsb.cs156.courses.jobs.UpdateCourseDataJobFactory;
+import edu.ucsb.cs156.courses.jobs.UploadGradeDataJob;
 import edu.ucsb.cs156.courses.jobs.UploadGradeDataJobFactory;
 import edu.ucsb.cs156.courses.repositories.JobsRepository;
 import edu.ucsb.cs156.courses.repositories.UserRepository;
 import edu.ucsb.cs156.courses.services.UCSBCurriculumService;
 import edu.ucsb.cs156.courses.services.UCSBSubjectsService;
-import edu.ucsb.cs156.courses.services.jobs.JobContextFactory;
 import edu.ucsb.cs156.courses.services.jobs.JobService;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,17 +33,16 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MvcResult;
 
 @Slf4j
 @WebMvcTest(controllers = JobsController.class)
-@Import({JobService.class, JobContextFactory.class})
 public class JobsControllerTests extends ControllerTestCase {
 
   @MockBean JobsRepository jobsRepository;
@@ -51,7 +51,7 @@ public class JobsControllerTests extends ControllerTestCase {
 
   @MockBean UploadGradeDataJobFactory uploadGradeDataJobFactory;
 
-  @Autowired JobService jobService;
+  @MockitoBean JobService jobService;
 
   @Autowired ObjectMapper objectMapper;
 
@@ -176,15 +176,15 @@ public class JobsControllerTests extends ControllerTestCase {
     // Arrange
     Long jobId = 1L;
     String jobLog = "This is a job log";
-    Job job = Job.builder().build();
-    job.setLog(jobLog);
-    when(jobsRepository.findById(jobId)).thenReturn(Optional.of(job));
+    when(jobService.getLongJob(jobId)).thenReturn(jobLog);
 
     // Act & Assert
     mockMvc
         .perform(get("/api/jobs/logs/{id}", jobId))
         .andExpect(status().isOk())
         .andExpect(content().string(jobLog));
+
+    verify(jobService, times(1)).getLongJob(jobId);
   }
 
   @WithMockUser(roles = {"ADMIN"})
@@ -192,15 +192,15 @@ public class JobsControllerTests extends ControllerTestCase {
   public void test_getJobLogs_admin_can_get_empty_log() throws Exception {
     // Arrange
     Long jobId = 2L;
-    Job job = Job.builder().build();
-    job.setLog("");
-    when(jobsRepository.findById(jobId)).thenReturn(Optional.of(job));
+    when(jobService.getLongJob(jobId)).thenReturn("");
 
     // Act & Assert
     mockMvc
         .perform(get("/api/jobs/logs/{id}", jobId))
         .andExpect(status().isOk())
         .andExpect(content().string(""));
+
+    verify(jobService, times(1)).getLongJob(jobId);
   }
 
   @WithMockUser(roles = {"ADMIN"})
@@ -253,6 +253,13 @@ public class JobsControllerTests extends ControllerTestCase {
   @WithMockUser(roles = {"ADMIN"})
   @Test
   public void admin_can_launch_update_courses_job() throws Exception {
+    UpdateCourseDataJob jobFromFactory = mock(UpdateCourseDataJob.class);
+    when(updateCourseDataJobFactory.createForSubjectAndQuarterAndIfStale(
+            eq("CMPSC"), eq("20231"), eq(true)))
+        .thenReturn(jobFromFactory);
+    Job jobStarted = Job.builder().status("running").build();
+    when(jobService.runAsJob(jobFromFactory)).thenReturn(jobStarted);
+
     // act
     MvcResult response =
         mockMvc
@@ -263,6 +270,8 @@ public class JobsControllerTests extends ControllerTestCase {
             .andReturn();
 
     // assert
+    verify(jobService, times(1)).runAsJob(jobFromFactory);
+
     String responseString = response.getResponse().getContentAsString();
     log.info("responseString={}", responseString);
     Job jobReturned = objectMapper.readValue(responseString, Job.class);
@@ -273,6 +282,12 @@ public class JobsControllerTests extends ControllerTestCase {
   @WithMockUser(roles = {"ADMIN"})
   @Test
   public void admin_can_launch_update_courses_job_with_quarter() throws Exception {
+    UpdateCourseDataJob jobFromFactory = mock(UpdateCourseDataJob.class);
+    when(updateCourseDataJobFactory.createForQuarter(eq("20231"), eq(true)))
+        .thenReturn(jobFromFactory);
+    Job jobStarted = Job.builder().status("running").build();
+    when(jobService.runAsJob(jobFromFactory)).thenReturn(jobStarted);
+
     // act
     MvcResult response =
         mockMvc
@@ -281,6 +296,8 @@ public class JobsControllerTests extends ControllerTestCase {
             .andReturn();
 
     // assert
+    verify(jobService, times(1)).runAsJob(jobFromFactory);
+
     String responseString = response.getResponse().getContentAsString();
     log.info("responseString={}", responseString);
     Job jobReturned = objectMapper.readValue(responseString, Job.class);
@@ -291,6 +308,12 @@ public class JobsControllerTests extends ControllerTestCase {
   @WithMockUser(roles = {"ADMIN"})
   @Test
   public void admin_can_launch_update_courses_range_of_quarters_job() throws Exception {
+    UpdateCourseDataJob jobFromFactory = mock(UpdateCourseDataJob.class);
+    when(updateCourseDataJobFactory.createForQuarterRange(eq("20221"), eq("20222"), eq(true)))
+        .thenReturn(jobFromFactory);
+    Job jobStarted = Job.builder().status("running").build();
+    when(jobService.runAsJob(jobFromFactory)).thenReturn(jobStarted);
+
     // act
     MvcResult response =
         mockMvc
@@ -301,6 +324,8 @@ public class JobsControllerTests extends ControllerTestCase {
             .andReturn();
 
     // assert
+    verify(jobService, times(1)).runAsJob(jobFromFactory);
+
     String responseString = response.getResponse().getContentAsString();
     log.info("responseString={}", responseString);
     Job jobReturned = objectMapper.readValue(responseString, Job.class);
@@ -312,6 +337,13 @@ public class JobsControllerTests extends ControllerTestCase {
   @Test
   public void admin_can_launch_update_courses_range_of_quarters_single_subject_job()
       throws Exception {
+    UpdateCourseDataJob jobFromFactory = mock(UpdateCourseDataJob.class);
+    when(updateCourseDataJobFactory.createForSubjectAndQuarterRange(
+            eq("CMPSC"), eq("20221"), eq("20222"), eq(true)))
+        .thenReturn(jobFromFactory);
+    Job jobStarted = Job.builder().status("running").build();
+    when(jobService.runAsJob(jobFromFactory)).thenReturn(jobStarted);
+
     // act
     MvcResult response =
         mockMvc
@@ -322,6 +354,8 @@ public class JobsControllerTests extends ControllerTestCase {
             .andReturn();
 
     // assert
+    verify(jobService, times(1)).runAsJob(jobFromFactory);
+
     String responseString = response.getResponse().getContentAsString();
     log.info("responseString={}", responseString);
     Job jobReturned = objectMapper.readValue(responseString, Job.class);
@@ -332,6 +366,11 @@ public class JobsControllerTests extends ControllerTestCase {
   @WithMockUser(roles = {"ADMIN"})
   @Test
   public void admin_can_launch_upload_course_grade_data_job() throws Exception {
+    UploadGradeDataJob jobFromFactory = mock(UploadGradeDataJob.class);
+    when(uploadGradeDataJobFactory.create()).thenReturn(jobFromFactory);
+    Job jobStarted = Job.builder().status("running").build();
+    when(jobService.runAsJob(jobFromFactory)).thenReturn(jobStarted);
+
     // act
     MvcResult response =
         mockMvc
@@ -340,6 +379,8 @@ public class JobsControllerTests extends ControllerTestCase {
             .andReturn();
 
     // assert
+    verify(jobService, times(1)).runAsJob(jobFromFactory);
+
     String responseString = response.getResponse().getContentAsString();
     log.info("responseString={}", responseString);
     Job jobReturned = objectMapper.readValue(responseString, Job.class);
