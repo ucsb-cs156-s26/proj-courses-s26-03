@@ -375,5 +375,17 @@ public class UCSBCurriculumService {
 <span class="fc" id="L375">        .distinct()</span>
 <span class="fc" id="L376">        .collect(Collectors.toList());</span>
   }
+
+  public List&lt;String&gt; getAllRequirementCodes() throws Exception {
+<span class="fc" id="L380">    String json = getGeneralEducationInfo();</span>
+
+<span class="fc" id="L382">    List&lt;GERequirement&gt; allAreas =</span>
+<span class="fc" id="L383">        objectMapper.readValue(json, new TypeReference&lt;List&lt;GERequirement&gt;&gt;() {});</span>
+
+<span class="fc" id="L385">    return allAreas.stream()</span>
+<span class="fc" id="L386">        .map(GERequirement::getRequirementCode)</span>
+<span class="fc" id="L387">        .distinct()</span>
+<span class="fc" id="L388">        .collect(Collectors.toList());</span>
+  }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>
