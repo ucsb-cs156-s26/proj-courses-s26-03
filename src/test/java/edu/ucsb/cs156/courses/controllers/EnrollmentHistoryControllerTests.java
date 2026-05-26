@@ -55,7 +55,8 @@ public class EnrollmentHistoryControllerTests extends ControllerTestCase {
             .enrollment(196)
             .build());
 
-    when(enrollmentDataPointRepository.findByCourseIdStartingWith(eq("CMPSC   156"))).thenReturn(points);
+    when(enrollmentDataPointRepository.findByCourseIdStartingWith(eq("CMPSC   156")))
+        .thenReturn(points);
 
     MvcResult response =
         mockMvc
@@ -94,7 +95,8 @@ public class EnrollmentHistoryControllerTests extends ControllerTestCase {
             .enrollment(45)
             .build());
 
-    when(enrollmentDataPointRepository.findByCourseIdStartingWith(eq("CMPSC   130A"))).thenReturn(points);
+    when(enrollmentDataPointRepository.findByCourseIdStartingWith(eq("CMPSC   130A")))
+        .thenReturn(points);
 
     MvcResult response =
         mockMvc
