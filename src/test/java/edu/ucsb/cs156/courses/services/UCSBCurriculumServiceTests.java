@@ -429,6 +429,27 @@ public class UCSBCurriculumServiceTests {
   }
 
   @Test
+  public void test_getAllRequirementCodes_distinct() throws Exception {
+    String fakeJson =
+        "["
+            + "{\"requirementCode\":\"A1\",\"requirementTranslation\":\"…\",\"collegeCode\":\"ENGR\",\"objCode\":\"BS\",\"courseCount\":1,\"units\":4,\"inactive\":false},"
+            + "{\"requirementCode\":\"B1\",\"requirementTranslation\":\"…\",\"collegeCode\":\"L&S\",\"objCode\":\"BA\",\"courseCount\":1,\"units\":4,\"inactive\":false},"
+            + "{\"requirementCode\":\"A1\",\"requirementTranslation\":\"…\",\"collegeCode\":\"ENGR\",\"objCode\":\"BS\",\"courseCount\":1,\"units\":4,\"inactive\":false}"
+            + "]";
+
+    this.mockRestServiceServer
+        .expect(requestTo(UCSBCurriculumService.GE_ENDPOINT))
+        .andExpect(header("Accept", MediaType.APPLICATION_JSON.toString()))
+        .andExpect(header("Content-Type", MediaType.APPLICATION_JSON.toString()))
+        .andExpect(header("ucsb-api-version", "1.0"))
+        .andExpect(header("ucsb-api-key", apiKey))
+        .andRespond(withSuccess(fakeJson, MediaType.APPLICATION_JSON));
+
+    List<String> codes = ucs.getAllRequirementCodes();
+    assertEquals(List.of("A1", "B1"), codes);
+  }
+
+  @Test
   public void test_getPrimariesGE() throws Exception {
     ObjectMapper objectMapper = new ObjectMapper();
 

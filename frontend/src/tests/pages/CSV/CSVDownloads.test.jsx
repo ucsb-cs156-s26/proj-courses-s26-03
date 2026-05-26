@@ -13,7 +13,9 @@ describe("CSVDownloadsPage tests", () => {
   });
 
   const renderPage = () => {
-    const queryClient = new QueryClient();
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
 
     render(
       <QueryClientProvider client={queryClient}>
