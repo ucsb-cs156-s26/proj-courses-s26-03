@@ -7,4 +7,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface EnrollmentDataPointRepository extends CrudRepository<EnrollmentDataPoint, Long> {
   Iterable<EnrollmentDataPoint> findByYyyyq(String yyyyq);
+
+  Iterable<EnrollmentDataPoint> findByCourseIdStartingWith(String courseIdPrefix);
 }
