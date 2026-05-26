@@ -39,6 +39,6 @@ public class EnrollmentHistoryController extends ApiController {
           @RequestParam
           String courseNumber) {
     String courseId = CourseUtilities.makeFormattedCourseId(subjectArea, courseNumber);
-    return enrollmentDataPointRepository.findByCourseId(courseId);
+    return enrollmentDataPointRepository.findByCourseIdStartingWith(courseId);
   }
 }
