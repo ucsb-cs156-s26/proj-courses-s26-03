@@ -6,7 +6,10 @@ import edu.ucsb.cs156.courses.services.UCSBCurriculumService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -18,8 +21,8 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = &quot;UCSBCurriculumController&quot;)
 @RestController
 @RequestMapping(&quot;/api/public&quot;)
-<span class="fc" id="L21">@Slf4j</span>
-<span class="fc" id="L22">public class UCSBCurriculumController extends ApiController {</span>
+<span class="fc" id="L24">@Slf4j</span>
+<span class="fc" id="L25">public class UCSBCurriculumController extends ApiController {</span>
 
   @Autowired UserRepository userRepository;
   @Autowired UCSBCurriculumService ucsbCurriculumService;
@@ -32,9 +35,9 @@ import org.springframework.web.bind.annotation.RestController;
       @RequestParam String qtr, @RequestParam String dept, @RequestParam String level)
       throws Exception {
 
-<span class="fc" id="L35">    String body = ucsbCurriculumService.getJSON(dept, qtr, level);</span>
+<span class="fc" id="L38">    String body = ucsbCurriculumService.getJSON(dept, qtr, level);</span>
 
-<span class="fc" id="L37">    return ResponseEntity.ok().body(body);</span>
+<span class="fc" id="L40">    return ResponseEntity.ok().body(body);</span>
   }
 
   /**
@@ -52,17 +55,38 @@ import org.springframework.web.bind.annotation.RestController;
       @RequestParam String qtr, @RequestParam String dept, @RequestParam String level)
       throws Exception {
 
-<span class="fc" id="L55">    List&lt;Primary&gt; primaries = ucsbCurriculumService.getPrimaries(dept, qtr, level);</span>
+<span class="fc" id="L58">    List&lt;Primary&gt; primaries = ucsbCurriculumService.getPrimaries(dept, qtr, level);</span>
 
-<span class="fc" id="L57">    return primaries;</span>
+<span class="fc" id="L60">    return primaries;</span>
   }
 
-  @Operation(summary = &quot;Get primaries for a given quarter and GE area&quot;)
+  @Operation(summary = &quot;Get primaries for a given quarter and GE area (use 'ALL' for all areas)&quot;)
   @GetMapping(value = &quot;/primariesge&quot;, produces = &quot;application/json&quot;)
   public List&lt;Primary&gt; primariesGE(@RequestParam String qtr, @RequestParam String area)
       throws Exception {
-<span class="fc" id="L64">    List&lt;Primary&gt; primaries = ucsbCurriculumService.getPrimariesByGE(qtr, area);</span>
-<span class="fc" id="L65">    return primaries;</span>
+<span class="fc bfc" id="L67" title="All 2 branches covered.">    if (&quot;ALL&quot;.equals(area)) {</span>
+<span class="fc" id="L68">      List&lt;String&gt; allCodes = ucsbCurriculumService.getAllRequirementCodes();</span>
+<span class="fc" id="L69">      List&lt;Primary&gt; combined = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L70">      Set&lt;String&gt; seen = new HashSet&lt;&gt;();</span>
+<span class="fc bfc" id="L71" title="All 2 branches covered.">      for (String code : allCodes) {</span>
+<span class="fc" id="L72">        List&lt;Primary&gt; primaries = ucsbCurriculumService.getPrimariesByGE(qtr, code);</span>
+<span class="fc bfc" id="L73" title="All 2 branches covered.">        for (Primary p : primaries) {</span>
+<span class="fc bfc" id="L74" title="All 2 branches covered.">          if (seen.add(p.getCourseId())) {</span>
+<span class="fc" id="L75">            combined.add(p);</span>
+          }
+<span class="fc" id="L77">        }</span>
+<span class="fc" id="L78">      }</span>
+<span class="fc" id="L79">      return combined;</span>
+    }
+<span class="fc" id="L81">    List&lt;Primary&gt; primaries = ucsbCurriculumService.getPrimariesByGE(qtr, area);</span>
+<span class="fc" id="L82">    Set&lt;String&gt; seen = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L83">    List&lt;Primary&gt; deduped = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L84" title="All 2 branches covered.">    for (Primary p : primaries) {</span>
+<span class="fc bfc" id="L85" title="All 2 branches covered.">      if (seen.add(p.getCourseId())) {</span>
+<span class="fc" id="L86">        deduped.add(p);</span>
+      }
+<span class="fc" id="L88">    }</span>
+<span class="fc" id="L89">    return deduped;</span>
   }
 
   // Backend for final exam info, similar to the above operation:
@@ -72,9 +96,9 @@ import org.springframework.web.bind.annotation.RestController;
       @RequestParam String quarterYYYYQ, @RequestParam String enrollCd)
       throws Exception { // Looks for quarter and code
 
-<span class="fc" id="L75">    String body = ucsbCurriculumService.getFinalsInfo(quarterYYYYQ, enrollCd);</span>
+<span class="fc" id="L99">    String body = ucsbCurriculumService.getFinalsInfo(quarterYYYYQ, enrollCd);</span>
 
-<span class="fc" id="L77">    return ResponseEntity.ok().body(body);</span>
+<span class="fc" id="L101">    return ResponseEntity.ok().body(body);</span>
   }
 
   @Operation(summary = &quot;Get General Education areas, optionally filtered by collegeCode&quot;)
@@ -85,14 +109,14 @@ import org.springframework.web.bind.annotation.RestController;
           String collegeCode)
       throws Exception {
 
-<span class="fc bfc" id="L88" title="All 2 branches covered.">    if (collegeCode != null) {</span>
+<span class="fc bfc" id="L112" title="All 2 branches covered.">    if (collegeCode != null) {</span>
       // returns List&lt;String&gt; of requirementCode
-<span class="fc" id="L90">      List&lt;String&gt; codes = ucsbCurriculumService.getRequirementCodesByCollege(collegeCode);</span>
-<span class="fc" id="L91">      return ResponseEntity.ok().body(codes);</span>
+<span class="fc" id="L114">      List&lt;String&gt; codes = ucsbCurriculumService.getRequirementCodesByCollege(collegeCode);</span>
+<span class="fc" id="L115">      return ResponseEntity.ok().body(codes);</span>
     } else {
       // returns the full raw JSON array
-<span class="fc" id="L94">      String body = ucsbCurriculumService.getGeneralEducationInfo();</span>
-<span class="fc" id="L95">      return ResponseEntity.ok().body(body);</span>
+<span class="fc" id="L118">      String body = ucsbCurriculumService.getGeneralEducationInfo();</span>
+<span class="fc" id="L119">      return ResponseEntity.ok().body(body);</span>
     }
   }
 }
