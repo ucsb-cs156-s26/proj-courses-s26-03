@@ -23,6 +23,7 @@ public class Course {
   private String courseId;
   private String title;
   private String description;
+  private Integer unitsFixed;
   private List<Section> classSections;
   private List<GeneralEducation> generalEducation;
 }
