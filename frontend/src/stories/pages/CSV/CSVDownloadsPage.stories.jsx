@@ -3,6 +3,7 @@ import React from "react";
 import CSVDownloadsPage from "main/pages/CSV/CSVDownloadsPage";
 
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
+import { ucsbSubjectsFixtures } from "fixtures/ucsbSubjectsFixtures";
 
 import { http, HttpResponse } from "msw";
 
@@ -23,6 +24,11 @@ Default.parameters = {
     }),
     http.get("/api/currentUser", () => {
       return HttpResponse.status(403); // returns 403 when not logged in
+    }),
+    http.get("/api/UCSBSubjects/all", () => {
+      return HttpResponse.json(ucsbSubjectsFixtures.threeSubjects, {
+        status: 200,
+      });
     }),
   ],
 };
