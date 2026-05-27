@@ -6,9 +6,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 <span class="fc" id="L7">public class TestErrorController {</span>
 
-    @GetMapping(&quot;/test-error&quot;)
-    public String testError() {
-<span class="fc" id="L11">        throw new RuntimeException(&quot;This is a test exception to trigger the custom error page&quot;);</span>
-    }
+  @GetMapping(&quot;/test-error&quot;)
+  public String testError() {
+<span class="fc" id="L11">    throw new RuntimeException(&quot;This is a test exception to trigger the custom error page&quot;);</span>
+  }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.10.202304240956</span></div></body></html>
