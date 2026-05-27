@@ -9,6 +9,7 @@ import {
   renderInfoLink,
   renderDetailPageLink,
   formatStatus,
+  formatSummerSession,
   isLectureWithNoSections,
   shouldShowAddToScheduleLink,
 } from "main/utils/sectionUtils";
@@ -195,6 +196,20 @@ describe("section utils tests", () => {
     test("formatStatus open test", () => {
       const section = { enrolledTotal: 20, maxEnroll: 30 };
       expect(formatStatus(section)).toBe("Open");
+    });
+  });
+  describe("formatSummerSession tests", () => {
+    test("extracts session letter from 6th character", () => {
+      expect(formatSummerSession("00000A  ")).toBe("A");
+      expect(formatSummerSession("00000B  ")).toBe("B");
+      expect(formatSummerSession("00000a  ")).toBe("A");
+    });
+
+    test("returns empty for non-summer / missing session", () => {
+      expect(formatSummerSession(null)).toBe("");
+      expect(formatSummerSession("000000  ")).toBe("");
+      expect(formatSummerSession("")).toBe("");
+      expect(formatSummerSession("00000")).toBe("");
     });
   });
   describe("tests that depend on what kind of row it is", () => {

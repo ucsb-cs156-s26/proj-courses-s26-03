@@ -20,6 +20,7 @@ describe("ConvertedSectionTable tests", () => {
       "Location",
       "Instructors",
       "Section",
+      "Summer session",
     ];
 
     expectedHeaders.forEach((header) => {
@@ -71,10 +72,30 @@ describe("ConvertedSectionTable tests", () => {
     expect(section).toBeInTheDocument();
     expect(section).toHaveTextContent("0100");
 
+    const summerSession = screen.getByTestId(
+      `${testid}-cell-row-0-col-summerSession`,
+    );
+    expect(summerSession).toBeInTheDocument();
+    expect(summerSession).toHaveTextContent("");
+
     const instructors = screen.getByTestId(
       `${testid}-cell-row-0-col-instructors`,
     );
     expect(instructors).toBeInTheDocument();
     expect(instructors).toHaveTextContent("WANG L C");
+  });
+
+  test("Summer session cell shows letter when session code has one", () => {
+    const sectionsSummer = [
+      {
+        ...oneSection[0],
+        section: { ...oneSection[0].section, session: "00000C  " },
+      },
+    ];
+    render(<ConvertedSectionTable sections={sectionsSummer} />);
+    const cell = screen.getByTestId(
+      "ConvertedSectionTable-cell-row-0-col-summerSession",
+    );
+    expect(cell).toHaveTextContent("C");
   });
 });
