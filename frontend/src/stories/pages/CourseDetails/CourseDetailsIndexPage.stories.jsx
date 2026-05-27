@@ -6,6 +6,7 @@ import { ucsbSubjectsFixtures } from "fixtures/ucsbSubjectsFixtures";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
 import { personalSectionsFixtures } from "fixtures/personalSectionsFixtures";
 import { oneQuarterCourse } from "fixtures/gradeHistoryFixtures";
+import { enrollmentHistoryFixtures } from "fixtures/enrollmentHistoryFixtures";
 
 import { http, HttpResponse } from "msw";
 
@@ -63,6 +64,12 @@ Default.parameters = {
       return HttpResponse.json(finalsFixtures.cmpsc24_s26, {
         status: 200,
       });
+    }),
+    http.get("/api/enrollmenthistory/search", () => {
+      return HttpResponse.json(
+        enrollmentHistoryFixtures.fiveSnapshotsSingleSection,
+        { status: 200 },
+      );
     }),
   ],
 };
