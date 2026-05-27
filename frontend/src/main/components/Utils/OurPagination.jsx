@@ -1,27 +1,21 @@
-import React, { useState } from "react";
+import React from "react";
 import { Pagination } from "react-bootstrap";
 
-// eslint-disable-next-line react-refresh/only-export-components
-export const emptyArray = () => []; // factored out for Stryker testing
-
 const OurPagination = ({
+  activePage = 1,
   updateActivePage,
   totalPages = 10,
   testId = "OurPagination",
 }) => {
-  const [activePage, setActivePage] = useState(1);
   const nextPage = () => {
     const newPage = Math.min(activePage + 1, totalPages);
-    setActivePage(newPage);
     updateActivePage(newPage);
   };
   const prevPage = () => {
     const newPage = Math.max(activePage - 1, 1);
-    setActivePage(newPage);
     updateActivePage(newPage);
   };
   const thisPage = (page) => {
-    setActivePage(page);
     updateActivePage(page);
   };
 
@@ -36,16 +30,11 @@ const OurPagination = ({
     </Pagination.Item>
   );
 
-  const generateSimplePaginationItems = () => {
-    const paginationItems = emptyArray();
-    for (let number = 1; number <= totalPages; number++) {
-      paginationItems.push(pageButton(number));
-    }
-    return paginationItems;
-  };
+  const generateSimplePaginationItems = () =>
+    Array.from({ length: totalPages }, (_, index) => pageButton(index + 1));
 
   const generateComplexPaginationItems = () => {
-    const paginationItems = emptyArray();
+    const paginationItems = [];
 
     // Always show page 1 and totalPages
     paginationItems.push(pageButton(1));
