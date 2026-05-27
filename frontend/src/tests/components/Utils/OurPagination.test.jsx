@@ -46,6 +46,33 @@ describe("OurPagination tests", () => {
       "OurPagination-10",
       "OurPagination-next",
     ]);
+    expect(screen.getByTestId("OurPagination-1").parentElement).toHaveClass(
+      "active",
+    );
+    expect(screen.getByTestId("OurPagination-2").parentElement).not.toHaveClass(
+      "active",
+    );
+  });
+
+  test("uses activePage prop to choose active button", async () => {
+    const updateActivePage = vi.fn();
+    render(
+      <OurPagination
+        activePage={5}
+        totalPages={12}
+        updateActivePage={updateActivePage}
+      />,
+    );
+
+    expect(screen.getByTestId("OurPagination-4").parentElement).not.toHaveClass(
+      "active",
+    );
+    expect(screen.getByTestId("OurPagination-5").parentElement).toHaveClass(
+      "active",
+    );
+    expect(screen.getByTestId("OurPagination-6").parentElement).not.toHaveClass(
+      "active",
+    );
   });
 
   test("renders correctly for totalPages = 5 (less than or equal to 7)", async () => {

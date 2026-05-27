@@ -34,58 +34,52 @@ const OurPagination = ({
     Array.from({ length: totalPages }, (_, index) => pageButton(index + 1));
 
   const generateComplexPaginationItems = () => {
-    const paginationItems = [];
-
-    // Always show page 1 and totalPages
-    paginationItems.push(pageButton(1));
+    let middleItems;
 
     // Case 1: activePage is near the beginning (1, 2, 3, 4)
     if (activePage < 5) {
-      paginationItems.push(pageButton(2));
-      paginationItems.push(pageButton(3));
-      paginationItems.push(pageButton(4));
-      paginationItems.push(pageButton(5));
-      paginationItems.push(
+      middleItems = [
+        pageButton(2),
+        pageButton(3),
+        pageButton(4),
+        pageButton(5),
         <Pagination.Ellipsis
           key="right-ellipsis"
           data-testid={`${testId}-right-ellipsis`}
         />,
-      );
+      ];
     }
     // Case 2: activePage is near the end (totalPages - 3, totalPages - 2, totalPages - 1, totalPages)
     else if (activePage > totalPages - 4) {
-      paginationItems.push(
+      middleItems = [
         <Pagination.Ellipsis
           key="left-ellipsis"
           data-testid={`${testId}-left-ellipsis`}
         />,
-      );
-      paginationItems.push(pageButton(totalPages - 4));
-      paginationItems.push(pageButton(totalPages - 3));
-      paginationItems.push(pageButton(totalPages - 2));
-      paginationItems.push(pageButton(totalPages - 1));
+        pageButton(totalPages - 4),
+        pageButton(totalPages - 3),
+        pageButton(totalPages - 2),
+        pageButton(totalPages - 1),
+      ];
     }
     // Case 3: activePage is in the middle
     else {
-      paginationItems.push(
+      middleItems = [
         <Pagination.Ellipsis
           key="left-ellipsis"
           data-testid={`${testId}-left-ellipsis`}
         />,
-      );
-      paginationItems.push(pageButton(activePage - 1));
-      paginationItems.push(pageButton(activePage));
-      paginationItems.push(pageButton(activePage + 1));
-      paginationItems.push(
+        pageButton(activePage - 1),
+        pageButton(activePage),
+        pageButton(activePage + 1),
         <Pagination.Ellipsis
           key="right-ellipsis"
           data-testid={`${testId}-right-ellipsis`}
         />,
-      );
+      ];
     }
 
-    paginationItems.push(pageButton(totalPages));
-    return paginationItems;
+    return [pageButton(1), ...middleItems, pageButton(totalPages)];
   };
 
   const generatePaginationItems = () =>
