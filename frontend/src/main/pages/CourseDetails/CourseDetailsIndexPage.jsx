@@ -6,6 +6,7 @@ import CourseDetailsTable from "main/components/CourseDetails/CourseDetailsTable
 import { yyyyqToQyy } from "main/utils/quarterUtilities";
 import CourseDescriptionTable from "main/components/Courses/CourseDescriptionTable";
 import GradeHistoryGraphs from "main/components/GradeHistory/GradeHistoryGraph";
+import EnrollmentHistoryGraph from "main/components/EnrollmentHistory/EnrollmentHistoryGraph";
 import FinalExamCard from "main/components/Finals/FinalExamCard";
 
 export default function CourseDetailsIndexPage() {
@@ -71,6 +72,22 @@ export default function CourseDetailsIndexPage() {
     },
   );
 
+  // Fetch Enrollment History Data
+  const { data: enrollmentHistory } = useBackend(
+    // Stryker disable all : hard to test for query caching
+    [
+      `/api/enrollmenthistory/search?subjectArea=${subjectArea}&courseNumber=${trimmedCourseNumber}`,
+    ],
+    {
+      method: "GET",
+      url: "/api/enrollmenthistory/search",
+      params: {
+        subjectArea: subjectArea,
+        courseNumber: trimmedCourseNumber,
+      },
+    },
+  );
+
   return (
     <BasicLayout>
       <div className="pt-2">
@@ -87,6 +104,9 @@ export default function CourseDetailsIndexPage() {
         {moreDetails && <CourseDetailsTable details={[moreDetails]} />}
         {moreDetails && <CourseDescriptionTable course={moreDetails} />}
         {gradeHistory && <GradeHistoryGraphs gradeHistory={gradeHistory} />}
+        {enrollmentHistory && (
+          <EnrollmentHistoryGraph enrollmentHistory={enrollmentHistory} />
+        )}
       </div>
     </BasicLayout>
   );

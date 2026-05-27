@@ -10,6 +10,7 @@ import { apiCurrentUserFixtures } from "fixtures/currentUserFixtures";
 import { systemInfoFixtures } from "fixtures/systemInfoFixtures";
 import { personalSectionsFixtures } from "fixtures/personalSectionsFixtures";
 import { oneQuarterCourse } from "fixtures/gradeHistoryFixtures";
+import { enrollmentHistoryFixtures } from "fixtures/enrollmentHistoryFixtures";
 
 const mockToast = vi.fn();
 vi.mock("react-toastify", async () => {
@@ -93,6 +94,11 @@ describe("CourseDetailsIndexPage tests", () => {
         params: { subjectArea: "CHEM", courseNumber: "184" },
       })
       .reply(200, oneQuarterCourse);
+    axiosMock
+      .onGet("/api/enrollmenthistory/search", {
+        params: { subjectArea: "CHEM", courseNumber: "184" },
+      })
+      .reply(200, enrollmentHistoryFixtures.fiveSnapshotsSingleSection);
   });
 
   const queryClient = new QueryClient();
@@ -145,5 +151,17 @@ describe("CourseDetailsIndexPage tests", () => {
     );
 
     expect(screen.getByText("Fall 2009 - GONZALEZ T F")).toBeInTheDocument();
+  });
+
+  test("Calls enrollment history api correctly and renders enrollment history graph", async () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <CourseDetailsIndexPage />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+
+    expect(await screen.findByText("Section 0100 - S25")).toBeInTheDocument();
   });
 });
