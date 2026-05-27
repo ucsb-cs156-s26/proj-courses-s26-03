@@ -4,6 +4,9 @@ import path from "path";
 import { visualizer } from "rollup-plugin-visualizer";
 
 // https://vite.dev/config/
+/** @see https://vitest.dev/config/onunhandlederror.html — Vitest v4 can report a
+ *  spurious EnvironmentTeardownError on slow CI (e.g. Ubuntu) when the worker
+ *  closes while a console forward ("onUserConsoleLog") is still pending. */
 export default defineConfig({
     plugins: [
         react({
@@ -30,6 +33,16 @@ export default defineConfig({
         environment: "jsdom", // makes it possible to use DOM APIs
         setupFiles: "./vitest.setup.js",
         include: ["src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
+        onUnhandledError(error) {
+            if (
+                error &&
+                error.name === "EnvironmentTeardownError" &&
+                typeof error.message === "string" &&
+                error.message.includes("onUserConsoleLog")
+            ) {
+                return false;
+            }
+        },
         coverage: {
             enabled: true, // This enables coverage collection, equivalent to `check-coverage`
             provider: "v8", // Recommended for performance, but you can also use 'istanbul'
