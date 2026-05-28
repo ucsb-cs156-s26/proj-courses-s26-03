@@ -34,6 +34,7 @@ const AdminUsersPage = () => {
     <BasicLayout>
       <h2>Users</h2>
       <OurPagination
+        activePage={selectedPage}
         updateActivePage={setSelectedPage}
         totalPages={page.totalPages}
       />
